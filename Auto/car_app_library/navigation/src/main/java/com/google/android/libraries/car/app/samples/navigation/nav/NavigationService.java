@@ -1,0 +1,300 @@
+/*
+ * Copyright (C) 2020 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package com.google.android.libraries.car.app.samples.navigation.nav;
+
+import android.app.Notification;
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
+import android.app.Service;
+import android.content.Intent;
+import android.os.Binder;
+import android.os.Build;
+import android.os.IBinder;
+import android.util.Log;
+import androidx.annotation.Nullable;
+import androidx.core.app.NotificationCompat;
+import com.google.android.libraries.car.app.CarContext;
+import com.google.android.libraries.car.app.model.Distance;
+import com.google.android.libraries.car.app.navigation.NavigationManager;
+import com.google.android.libraries.car.app.navigation.model.Destination;
+import com.google.android.libraries.car.app.navigation.model.Step;
+import com.google.android.libraries.car.app.navigation.model.TravelEstimate;
+import com.google.android.libraries.car.app.navigation.model.Trip;
+import com.google.android.libraries.car.app.samples.navigation.R;
+import com.google.android.libraries.car.app.samples.navigation.app.MainActivity;
+import com.google.android.libraries.car.app.samples.navigation.model.Instruction;
+import com.google.android.libraries.car.app.samples.navigation.model.Script;
+import java.util.ArrayList;
+import java.util.List;
+
+/** Foreground service to provide navigation directions. */
+public class NavigationService extends Service {
+  private static final String TAG = "NavigationService";
+
+  public static final String CHANNEL_ID = "NavigationServiceChannel";
+
+  /** The identifier for the notification displayed for the foreground service. */
+  private static final int NOTIFICATION_ID = 87654321;
+
+  // Constants for location broadcast
+  private static final String PACKAGE_NAME =
+      "com.google.android.libraries.car.app.samples.navigation.nav.navigationservice";
+
+  private static final String EXTRA_STARTED_FROM_NOTIFICATION =
+      PACKAGE_NAME + ".started_from_notification";
+  public static final String CANCEL_ACTION = "CANCEL";
+
+  private NotificationManager mNotificationManager;
+  private final IBinder mBinder = new LocalBinder();
+
+  private @Nullable CarContext mCarContext;
+  private @Nullable Listener mListener;
+  private @Nullable NavigationManager mNavigationManager;
+  private boolean mIsNavigating;
+
+  private List<Destination> destinations = new ArrayList<>();
+  private List<Step> steps = new ArrayList<>();
+  private final Trip.Builder tripBuilder = Trip.builder();
+  private @Nullable Script mScript;
+
+  public interface Listener {
+    void navigationStateChanged(
+        boolean isNavigating,
+        boolean hasArrived,
+        List<Destination> destinations,
+        List<Step> steps,
+        TravelEstimate nextDestinationTravelEstimate,
+        Distance nextStepRemainingDistance);
+  }
+
+  /**
+   * Class used for the client Binder. Since this service runs in the same process as its clients,
+   * we don't need to deal with IPC.
+   */
+  public class LocalBinder extends Binder {
+    public NavigationService getService() {
+      return NavigationService.this;
+    }
+  }
+
+  @Override
+  public void onCreate() {
+    Log.i(TAG, "In onCreate()");
+    createNotificationChannel();
+  }
+
+  @Override
+  public int onStartCommand(Intent intent, int flags, int startId) {
+    Log.i(TAG, "In onStartCommand()");
+    if (CANCEL_ACTION.equals(intent.getAction())) {
+      stopNavigation();
+    }
+    return START_NOT_STICKY;
+  }
+
+  @Nullable
+  @Override
+  public IBinder onBind(Intent intent) {
+    return mBinder;
+  }
+
+  @Override
+  public boolean onUnbind(Intent intent) {
+    return true; // Ensures onRebind() is called when a client re-binds.
+  }
+
+  public void setCarContext(CarContext carContext, Listener listener) {
+    mCarContext = carContext;
+    mNavigationManager = mCarContext.getCarService(NavigationManager.class);
+    mNavigationManager.setListener(this::stopNavigation);
+    mListener = listener;
+
+    // Uncomment if navigating
+    // mNavigationManager.navigationStarted();
+  }
+
+  public void clearCarContext() {
+    mCarContext = null;
+    mNavigationManager = null;
+  }
+
+  public void executeInstructions(List<Instruction> instructions) {
+    mScript =
+        Script.execute(
+            instructions,
+            (instruction) -> {
+              switch (instruction.getType()) {
+                case START_NAVIGATION:
+                  startNavigation();
+                  break;
+                case END_NAVIGATION:
+                  endNavigationFromScript();
+                  break;
+                case ADD_DESTINATION_NAVIGATION:
+                  Destination destination = instruction.getDestination();
+                  destinations.add(destination);
+                  if (destinations.size() == 1) {
+                    tripBuilder.clearDestinations();
+                    tripBuilder.addDestination(destination);
+                  }
+                  break;
+                case POP_DESTINATION_NAVIGATION:
+                  destinations.remove(0);
+                  if (destinations.size() > 0) {
+                    tripBuilder.clearDestinations();
+                    tripBuilder.addDestination(destinations.get(0));
+                  }
+                  break;
+                case ADD_STEP_NAVIGATION:
+                  Step step = instruction.getStep();
+                  steps.add(step);
+                  if (steps.size() == 1) {
+                    tripBuilder.clearSteps();
+                    tripBuilder.addStep(step);
+                  }
+                  break;
+                case POP_STEP_NAVIGATION:
+                  steps.remove(0);
+                  tripBuilder.clearSteps();
+                  if (steps.size() > 0) {
+                    tripBuilder.addStep(steps.get(0));
+                  }
+                  break;
+                case SET_TRIP_POSITION_NAVIGATION:
+                  if (mIsNavigating) {
+                    TravelEstimate destinationTravelEstimate =
+                        instruction.getDestinationTravelEstimate();
+                    TravelEstimate stepTravelEstimate = instruction.getStepTravelEstimate();
+                    tripBuilder
+                        .clearDestinationTravelEstimates()
+                        .addDestinationTravelEstimate(destinationTravelEstimate)
+                        .clearStepTravelEstimates()
+                        .addStepTravelEstimate(stepTravelEstimate)
+                        .setCurrentRoad(instruction.getRoad());
+                    mNavigationManager.updateTrip(tripBuilder.build());
+                    if (mListener != null) {
+                      mListener.navigationStateChanged(
+                          /* isNavigating= */ true,
+                          /* hasArrived= */ false,
+                          destinations,
+                          steps,
+                          destinationTravelEstimate,
+                          instruction.getStepRemainingDistance());
+                    }
+                  }
+                  break;
+              }
+            });
+  }
+
+  public boolean getIsNavigating() {
+    return mIsNavigating;
+  }
+
+  public void startNavigation() {
+    Log.i(TAG, "Starting Navigation");
+    startService(new Intent(getApplicationContext(), NavigationService.class));
+
+    Log.i(TAG, "Starting foreground service");
+    startForeground(NOTIFICATION_ID, getNotification());
+
+    if (mNavigationManager != null) {
+      mNavigationManager.navigationStarted();
+      mIsNavigating = true;
+      mListener.navigationStateChanged(
+          mIsNavigating,
+          /* hasArrived= */ false,
+          /* destinations= */ null,
+          /* steps= */ null,
+          /* nextDestinationTravelEstimate= */ null,
+          /* nextStepRemainingDistance= */ null);
+    }
+  }
+
+  public void stopNavigation() {
+    Log.i(TAG, "Stopping Navigation");
+    if (mScript != null) {
+      mScript.stop();
+      destinations.clear();
+      steps.clear();
+      mScript = null;
+    }
+
+    if (mNavigationManager != null) {
+      mNavigationManager.navigationEnded();
+      mIsNavigating = false;
+      mListener.navigationStateChanged(
+          mIsNavigating,
+          /* hasArrived= */ false,
+          /* destinations= */ null,
+          /* steps= */ null,
+          /* nextDestinationTravelEstimate= */ null,
+          /* nextStepRemainingDistance= */ null);
+    }
+    stopForeground(true);
+    stopSelf();
+  }
+
+  private void endNavigationFromScript() {
+    stopNavigation();
+  }
+
+  private void createNotificationChannel() {
+    mNotificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+      CharSequence name = getString(R.string.app_name);
+      NotificationChannel serviceChannel =
+          new NotificationChannel(CHANNEL_ID, name, NotificationManager.IMPORTANCE_HIGH);
+      mNotificationManager.createNotificationChannel(serviceChannel);
+    }
+  }
+
+  /** Returns the {@link NotificationCompat} used as part of the foreground service. */
+  private Notification getNotification() {
+    CharSequence navigatingDisplayString = getString(R.string.navigation_active);
+    NotificationCompat.Builder builder =
+        new NotificationCompat.Builder(this, CHANNEL_ID)
+            .setContentIntent(createMainActivityPendingIntent())
+            .addAction(0, "STOP", createStopPendingIntent())
+            .setContentTitle(navigatingDisplayString)
+            .setOngoing(true)
+            .setSmallIcon(R.drawable.ic_launcher)
+            .setTicker(navigatingDisplayString)
+            .setWhen(System.currentTimeMillis());
+
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+      builder.setChannelId(CHANNEL_ID);
+      builder.setPriority(NotificationManager.IMPORTANCE_HIGH);
+    }
+
+    return builder.build();
+  }
+
+  private PendingIntent createStopPendingIntent() {
+    Intent intent = new Intent(this, NavigationService.class);
+    intent.setAction(CANCEL_ACTION);
+    intent.putExtra(EXTRA_STARTED_FROM_NOTIFICATION, true);
+    return PendingIntent.getService(this, 0, intent, 0);
+  }
+
+  private PendingIntent createMainActivityPendingIntent() {
+    Intent intent = new Intent(this, MainActivity.class);
+    intent.putExtra(EXTRA_STARTED_FROM_NOTIFICATION, true);
+    return PendingIntent.getActivity(this, 0, intent, 0);
+  }
+}
