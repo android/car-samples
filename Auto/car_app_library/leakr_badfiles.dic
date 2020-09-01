@@ -1,0 +1,9 @@
+;; Config for go/leakr.
+;; Format is defined at g3doc/testing/leakr/g3doc/dictionaries.md.
+
+;; Android Studio auto generated files
+$RE:\.class$!!.*org\/gradle\/cli\/.*\.class!!.*org\/gradle\/wrapper\/.*\.class;0;Allow gradle cli classes
+
+;; We are shipping source code so override the source code entries in
+;; the default dictionary.
+$RE:\.java(?:.bak|)$;0;Allow Java source code
