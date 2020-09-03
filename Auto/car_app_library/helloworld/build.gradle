@@ -37,9 +37,6 @@ android {
         debug {
             // The proguard rules are needed for the instrumentation tests otherwise the test
             // methods would be stripped from the test apk.
-            // Temporarily disable minifyEnabled as it is causing proguard issue
-            // with androidx.lifecycle being obfuscated.
-            // minifyEnabled true
             testProguardFiles getDefaultProguardFile('proguard-android.txt'), 'test_app_rules.pro'
         }
     }
