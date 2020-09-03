@@ -31,8 +31,6 @@ Install the APK with ADB:
 adb install -t path_to_your_apk
 ```
 
-
-
 ## Run the Apps in the Desktop Head Unit (DHU)
 
 Follow the instructions in [Test Android apps for cars][1] to run the sample apps in the DHU.
