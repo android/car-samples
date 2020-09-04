@@ -31,7 +31,7 @@ import com.google.android.libraries.car.app.navigation.model.MessageInfo;
 import com.google.android.libraries.car.app.navigation.model.NavigationTemplate;
 import com.google.android.libraries.car.app.samples.showcase.R;
 
-/** A screen that shows the routing template in arrived state. */
+/** A screen that shows the navigation template in arrived state. */
 public final class ArrivedDemoScreen extends Screen implements DefaultLifecycleObserver {
   public ArrivedDemoScreen(CarContext carContext) {
     super(carContext);

@@ -25,10 +25,9 @@ import com.google.android.libraries.car.app.model.ListTemplate;
 import com.google.android.libraries.car.app.model.Row;
 import com.google.android.libraries.car.app.model.Template;
 
-/** A screen showing a demos for the routing template in different states. */
-public final class RoutingTemplateDemoScreen extends Screen {
-
-  public RoutingTemplateDemoScreen(CarContext carContext) {
+/** A screen showing a demos for the navigation template in different states. */
+public final class NavigationTemplateDemoScreen extends Screen {
+  public NavigationTemplateDemoScreen(CarContext carContext) {
     super(carContext);
   }
 
@@ -39,9 +38,9 @@ public final class RoutingTemplateDemoScreen extends Screen {
 
     listBuilder.addItem(
         Row.builder()
-            .setTitle("Re-routing Demo")
+            .setTitle("Loading Demo")
             .setOnClickListener(
-                () -> getScreenManager().push(new ReroutingDemoScreen(getCarContext())))
+                () -> getScreenManager().push(new LoadingDemoScreen(getCarContext())))
             .build());
 
     listBuilder.addItem(
@@ -67,7 +66,7 @@ public final class RoutingTemplateDemoScreen extends Screen {
 
     return ListTemplate.builder()
         .setSingleList(listBuilder.build())
-        .setTitle("Routing Template Demos")
+        .setTitle("Navigation Template Demos")
         .setHeaderAction(Action.BACK)
         .build();
   }

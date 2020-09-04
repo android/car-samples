@@ -27,7 +27,7 @@ import com.google.android.libraries.car.app.model.ListTemplate;
 import com.google.android.libraries.car.app.model.Row;
 import com.google.android.libraries.car.app.model.Template;
 import com.google.android.libraries.car.app.samples.showcase.R;
-import com.google.android.libraries.car.app.samples.showcase.navigation.routing.RoutingTemplateDemoScreen;
+import com.google.android.libraries.car.app.samples.showcase.navigation.routing.NavigationTemplateDemoScreen;
 
 /** A screen showing a list of navigation demos */
 public final class NavigationDemosScreen extends Screen {
@@ -46,9 +46,9 @@ public final class NavigationDemosScreen extends Screen {
                 CarIcon.of(
                     IconCompat.createWithResource(
                         getCarContext(), R.drawable.ic_explore_white_24dp)))
-            .setTitle("Routing Template Demo")
+            .setTitle("Navigation Template Demo")
             .setOnClickListener(
-                () -> getScreenManager().push(new RoutingTemplateDemoScreen(getCarContext())))
+                () -> getScreenManager().push(new NavigationTemplateDemoScreen(getCarContext())))
             .setIsBrowsable(true)
             .build());
 

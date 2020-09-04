@@ -26,7 +26,7 @@ import com.google.android.libraries.car.app.model.Template;
 import com.google.android.libraries.car.app.navigation.model.NavigationTemplate;
 import com.google.android.libraries.car.app.navigation.model.RoutingInfo;
 
-/** A screen that shows the routing template in navigating state. */
+/** A screen that shows the navigation template in routing state. */
 public final class NavigatingDemoScreen extends Screen implements DefaultLifecycleObserver {
   public NavigatingDemoScreen(CarContext carContext) {
     super(carContext);

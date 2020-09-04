@@ -25,9 +25,9 @@ import com.google.android.libraries.car.app.model.Template;
 import com.google.android.libraries.car.app.navigation.model.NavigationTemplate;
 import com.google.android.libraries.car.app.navigation.model.RoutingInfo;
 
-/** A screen that shows the routing template in rerouting state. */
-public final class ReroutingDemoScreen extends Screen implements DefaultLifecycleObserver {
-  public ReroutingDemoScreen(CarContext carContext) {
+/** A screen that shows the navigation template in loading state. */
+public final class LoadingDemoScreen extends Screen implements DefaultLifecycleObserver {
+  public LoadingDemoScreen(CarContext carContext) {
     super(carContext);
   }
 

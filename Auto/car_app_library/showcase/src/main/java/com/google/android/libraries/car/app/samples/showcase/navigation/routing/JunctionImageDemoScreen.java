@@ -28,7 +28,7 @@ import com.google.android.libraries.car.app.navigation.model.NavigationTemplate;
 import com.google.android.libraries.car.app.navigation.model.RoutingInfo;
 import com.google.android.libraries.car.app.samples.showcase.R;
 
-/** A screen that shows the routing template in navigating state showing a junction image. */
+/** A screen that shows the navigation template in routing state showing a junction image. */
 public final class JunctionImageDemoScreen extends Screen implements DefaultLifecycleObserver {
   public JunctionImageDemoScreen(CarContext carContext) {
     super(carContext);
