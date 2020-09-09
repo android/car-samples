@@ -16,17 +16,25 @@
 
 package com.google.android.libraries.car.app.samples.navigation.nav;
 
+import static android.media.AudioManager.AUDIOFOCUS_REQUEST_GRANTED;
+
 import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Intent;
+import android.content.res.AssetFileDescriptor;
+import android.media.AudioAttributes;
+import android.media.AudioFocusRequest;
+import android.media.AudioManager;
+import android.media.MediaPlayer;
 import android.os.Binder;
 import android.os.Build;
 import android.os.IBinder;
 import android.util.Log;
 import androidx.annotation.Nullable;
+import androidx.annotation.RawRes;
 import androidx.core.app.NotificationCompat;
 import com.google.android.libraries.car.app.CarContext;
 import com.google.android.libraries.car.app.model.Distance;
@@ -39,6 +47,7 @@ import com.google.android.libraries.car.app.samples.navigation.R;
 import com.google.android.libraries.car.app.samples.navigation.app.MainActivity;
 import com.google.android.libraries.car.app.samples.navigation.model.Instruction;
 import com.google.android.libraries.car.app.samples.navigation.model.Script;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -66,6 +75,7 @@ public class NavigationService extends Service {
   private @Nullable Listener mListener;
   private @Nullable NavigationManager mNavigationManager;
   private boolean mIsNavigating;
+  private int mStepsSent;
 
   private List<Destination> destinations = new ArrayList<>();
   private List<Step> steps = new ArrayList<>();
@@ -188,6 +198,12 @@ public class NavigationService extends Service {
                         .addStepTravelEstimate(stepTravelEstimate)
                         .setCurrentRoad(instruction.getRoad());
                     mNavigationManager.updateTrip(tripBuilder.build());
+
+                    if (++mStepsSent % 10 == 0) {
+                      // For demo purposes only play audio of next turn every 10 steps.
+                      playNavigationDirection(R.raw.turn_right);
+                    }
+
                     if (mListener != null) {
                       mListener.navigationStateChanged(
                           /* isNavigating= */ true,
@@ -280,6 +296,71 @@ public class NavigationService extends Service {
     }
     stopForeground(true);
     stopSelf();
+  }
+
+  private void playNavigationDirection(@RawRes int resourceId) {
+    CarContext carContext = mCarContext;
+    if (carContext == null) {
+      return;
+    }
+
+    MediaPlayer mediaPlayer = new MediaPlayer();
+
+    // Use USAGE_ASSISTANCE_NAVIGATION_GUIDANCE as the usage type for any navigation related
+    // audio, so that the audio will be played in the car speaker.
+    AudioAttributes audioAttributes =
+        new AudioAttributes.Builder()
+            .setContentType(AudioAttributes.CONTENT_TYPE_SPEECH)
+            .setUsage(AudioAttributes.USAGE_ASSISTANCE_NAVIGATION_GUIDANCE)
+            .build();
+
+    mediaPlayer.setAudioAttributes(audioAttributes);
+
+    // Request audio focus with AUDIOFOCUS_GAIN_TRANSIENT_MAY_DUCK so that it will duck ongoing
+    // media.
+    // Ducking will behave differently depending on what is playing, if it is music it will lower
+    // the volume, if it is speech, it will pause it.
+    AudioFocusRequest request =
+        new AudioFocusRequest.Builder(AudioManager.AUDIOFOCUS_GAIN_TRANSIENT_MAY_DUCK)
+            .setAudioAttributes(audioAttributes)
+            .build();
+
+    AudioManager audioManager = carContext.getSystemService(AudioManager.class);
+
+    mediaPlayer.setOnCompletionListener(
+        player -> {
+          try {
+            // When the audio finishes playing: stop and release the media player.
+            player.stop();
+            player.release();
+          } finally {
+            // Release the audio focus so that any previously playing audio can continue.
+            audioManager.abandonAudioFocusRequest(request);
+          }
+        });
+
+    // Requesting the audio focus.
+    if (audioManager.requestAudioFocus(request) != AUDIOFOCUS_REQUEST_GRANTED) {
+      // If audio focus is not granted ignore it.
+      return;
+    }
+
+    try {
+      // Load our raw resource file, in the case where you synthesize the audio for the given
+      // direction, just use that audio file.
+      AssetFileDescriptor afd = carContext.getResources().openRawResourceFd(resourceId);
+      mediaPlayer.setDataSource(afd.getFileDescriptor(), afd.getStartOffset(), afd.getLength());
+      afd.close();
+
+      mediaPlayer.prepare();
+    } catch (IOException e) {
+      Log.e(TAG, "Failure loading audio resource", e);
+      // Release the audio focus so that any previously playing audio can continue.
+      audioManager.abandonAudioFocusRequest(request);
+    }
+
+    // Start the audio playback.
+    mediaPlayer.start();
   }
 
   private void endNavigationFromScript() {
