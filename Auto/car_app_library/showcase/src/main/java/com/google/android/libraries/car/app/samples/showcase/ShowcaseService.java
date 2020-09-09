@@ -33,6 +33,7 @@ import com.google.android.libraries.car.app.CarToast;
 import com.google.android.libraries.car.app.Screen;
 import com.google.android.libraries.car.app.ScreenManager;
 import com.google.android.libraries.car.app.samples.showcase.misc.GoToPhoneScreen;
+import com.google.android.libraries.car.app.samples.showcase.misc.PreSeedingFlowScreen;
 import com.google.android.libraries.car.app.samples.showcase.misc.ReservationCancelledScreen;
 import com.google.android.libraries.car.app.samples.showcase.navigation.NavigationNotificationsDemoScreen;
 import com.google.android.libraries.car.app.samples.showcase.navigation.SurfaceRenderer;
@@ -41,6 +42,9 @@ import java.util.Objects;
 
 /** Entry point for the showcase app. */
 public final class ShowcaseService extends CarAppService implements DefaultLifecycleObserver {
+  public static final String SHARED_PREF_KEY = "ShowcasePrefs";
+  public static final String PRE_SEED_KEY = "PreSeed";
+
   private static final String URI_SCHEME = "samples";
   private static final String URI_HOST = "showcase";
 
@@ -71,6 +75,24 @@ public final class ShowcaseService extends CarAppService implements DefaultLifec
       return new NavigatingDemoScreen(getCarContext());
     }
 
+    // For demo purposes this uses a shared preference setting to store whether we should pre-seed
+    // the screen back stack.  This allows the app to have a way to go back to the home/start screen
+    // making the home/start screen the 0th position.
+    // For a real application, it would probably check if it has all the needed system permissions,
+    // and if any are missing, it would pre-seed the start screen and return a screen that will send
+    // the user to the phone to grant the needed permissions.
+    boolean shouldPreSeedBackStack =
+        getSharedPreferences(SHARED_PREF_KEY, Context.MODE_PRIVATE).getBoolean(PRE_SEED_KEY, false);
+    if (shouldPreSeedBackStack) {
+      // Reset so that we don't require it next time
+      getSharedPreferences(ShowcaseService.SHARED_PREF_KEY, Context.MODE_PRIVATE)
+          .edit()
+          .putBoolean(ShowcaseService.PRE_SEED_KEY, false)
+          .apply();
+
+      getCarContext().getCarService(ScreenManager.class).push(new StartScreen(getCarContext()));
+      return new PreSeedingFlowScreen(getCarContext());
+    }
     return new StartScreen(getCarContext());
   }
 

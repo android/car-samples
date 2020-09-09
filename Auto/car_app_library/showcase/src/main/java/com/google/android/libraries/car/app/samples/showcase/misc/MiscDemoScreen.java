@@ -117,12 +117,6 @@ public final class MiscDemoScreen extends Screen implements DefaultLifecycleObse
 
     listBuilder.addItem(
         Row.builder()
-            .setTitle("Show Toast")
-            .setOnClickListener(() -> onClickShowToast("Toast text"))
-            .build());
-
-    listBuilder.addItem(
-        Row.builder()
             .setTitle("PopTo Demo")
             .setOnClickListener(
                 () -> getScreenManager().push(new PopToDemoScreen(getCarContext(), 0)))
@@ -138,7 +132,27 @@ public final class MiscDemoScreen extends Screen implements DefaultLifecycleObse
     listBuilder.addItem(
         Row.builder()
             .setTitle("Finish App Demo")
-            .setOnClickListener(() -> getScreenManager().push(new FinishAppScreen(getCarContext())))
+            .setOnClickListener(
+                () ->
+                    getScreenManager()
+                        .push(
+                            new FinishAppScreen(
+                                getCarContext(),
+                                /** willPreseed= */
+                                false)))
+            .build());
+
+    listBuilder.addItem(
+        Row.builder()
+            .setTitle("Pre-seed the Screen backstack on next run Demo")
+            .setOnClickListener(
+                () ->
+                    getScreenManager()
+                        .push(
+                            new FinishAppScreen(
+                                getCarContext(),
+                                /** willPreseed= */
+                                true)))
             .build());
 
     return ListTemplate.builder()

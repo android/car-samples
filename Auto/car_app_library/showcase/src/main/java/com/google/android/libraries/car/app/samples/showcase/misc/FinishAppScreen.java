@@ -18,33 +18,50 @@ package com.google.android.libraries.car.app.samples.showcase.misc;
 
 import static com.google.android.libraries.car.app.model.Action.BACK;
 
+import android.content.Context;
 import androidx.annotation.NonNull;
 import com.google.android.libraries.car.app.CarContext;
 import com.google.android.libraries.car.app.Screen;
 import com.google.android.libraries.car.app.model.Action;
 import com.google.android.libraries.car.app.model.MessageTemplate;
 import com.google.android.libraries.car.app.model.Template;
+import com.google.android.libraries.car.app.samples.showcase.ShowcaseService;
 import java.util.Collections;
 
 /**
  * A {@link Screen} that provides an action to exit the car app.
  */
 public class FinishAppScreen extends Screen {
+  private final boolean mWillPreseed;
 
-  protected FinishAppScreen(@NonNull CarContext carContext) {
+  protected FinishAppScreen(@NonNull CarContext carContext, boolean willPreseed) {
     super(carContext);
+    mWillPreseed = willPreseed;
   }
 
   @NonNull
   @Override
   public Template getTemplate() {
-    return MessageTemplate.builder("The app encountered an unrecoverable error")
-        .setTitle("Message Template Demo")
+    return MessageTemplate.builder(
+            mWillPreseed
+                ? "This will finish the app, and when you return it will pre-seed a permission"
+                    + " screen"
+                : "This will finish the app")
+        .setTitle("Finish App Demo")
         .setHeaderAction(BACK)
         .setActions(
             Collections.singletonList(
                 Action.builder()
-                    .setOnClickListener(getCarContext()::finishCarApp)
+                    .setOnClickListener(
+                        () -> {
+                          getCarContext()
+                              .getSharedPreferences(
+                                  ShowcaseService.SHARED_PREF_KEY, Context.MODE_PRIVATE)
+                              .edit()
+                              .putBoolean(ShowcaseService.PRE_SEED_KEY, true)
+                              .apply();
+                          getCarContext().finishCarApp();
+                        })
                     .setTitle("Exit")
                     .build()))
         .build();
