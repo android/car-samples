@@ -17,7 +17,6 @@
 package com.google.android.libraries.car.app.samples.showcase.templates;
 
 import static com.google.common.truth.Truth.assertThat;
-import static org.junit.Assert.assertEquals;
 
 import androidx.test.core.app.ApplicationProvider;
 import com.google.android.libraries.car.app.model.LatLng;
@@ -41,7 +40,7 @@ public final class PlaceListTemplateDemoScreenTest {
 
     PlaceListMapTemplateController controller =
         PlaceListMapTemplateController.of((PlaceListMapTemplate) screen.getTemplate());
-    assertEquals("Place List Template Demo", controller.getTitle());
+    assertThat(controller.getTitle()).isEqualTo("Place List Template Demo");
 
     RowController kirklandRow =
         controller.getItemList().getItemByTitle("Google Kirkland", RowController.class);
