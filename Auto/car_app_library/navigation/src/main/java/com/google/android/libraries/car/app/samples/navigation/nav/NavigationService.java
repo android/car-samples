@@ -37,8 +37,10 @@ import androidx.annotation.Nullable;
 import androidx.annotation.RawRes;
 import androidx.core.app.NotificationCompat;
 import com.google.android.libraries.car.app.CarContext;
+import com.google.android.libraries.car.app.CarToast;
 import com.google.android.libraries.car.app.model.Distance;
 import com.google.android.libraries.car.app.navigation.NavigationManager;
+import com.google.android.libraries.car.app.navigation.NavigationManagerListener;
 import com.google.android.libraries.car.app.navigation.model.Destination;
 import com.google.android.libraries.car.app.navigation.model.Step;
 import com.google.android.libraries.car.app.navigation.model.TravelEstimate;
@@ -132,7 +134,18 @@ public class NavigationService extends Service {
   public void setCarContext(CarContext carContext, Listener listener) {
     mCarContext = carContext;
     mNavigationManager = mCarContext.getCarService(NavigationManager.class);
-    mNavigationManager.setListener(this::stopNavigation);
+    mNavigationManager.setListener(
+        new NavigationManagerListener() {
+          @Override
+          public void stopNavigation() {
+            NavigationService.this.stopNavigation();
+          }
+
+          @Override
+          public void onAutoDriveEnabled() {
+            CarToast.makeText(carContext, "Auto drive enabled", CarToast.LENGTH_LONG);
+          }
+        });
     mListener = listener;
 
     // Uncomment if navigating
