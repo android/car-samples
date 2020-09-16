@@ -147,7 +147,7 @@ public class SamplePlaces {
             location2,
             PlaceMarker.builder()
                 .setIcon(
-                    CarIcon.builder(IconCompat.createWithResource(carContext, R.drawable.ic_hi))
+                    CarIcon.builder(IconCompat.createWithResource(carContext, R.drawable.ic_520))
                         .build(),
                     PlaceMarker.TYPE_IMAGE)
                 .build()));
