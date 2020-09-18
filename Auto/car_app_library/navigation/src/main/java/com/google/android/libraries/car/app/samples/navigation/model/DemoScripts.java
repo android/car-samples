@@ -85,16 +85,36 @@ import java.util.concurrent.TimeUnit;
  *
  * <p>The script takes the form of a list of instructions which can be passed to different parts of
  * the app. This is the central location where scripts are stored.
+ *
+ * <p>The scripts start with a setup phase where all destinations and steps are added to the
+ * instruction list. Then navigation updates are added for each step to simulate driving.
+ *
+ * <p>>The setup phases consists of:
+ *
+ * <ul>
+ *   <li>Start Navigation
+ *   <li>Add the destination information.
+ *   <li>Add 4 intermediate steps to the destination.
+ * </ul>
+ *
+ * <p>The navigation phase consists of
+ *
+ * <ul>
+ *   <li>Add positions along the route getting closer to the step.
+ *   <li>Once the step is reached, pop the step. If more steps remain go back to adding more
+ *       positions.
+ *   <li>When no more steps remain set the arrived state.
+ *   <li>End Navigation
+ * </ul>
+ *
+ * <p>There are several helper functions including {@link #generateTripUpdateSequence} which
+ * interpolates a straight path and generates all the updates for a step.
  */
 public class DemoScripts {
 
   private static long INSTRUCTION_NO_ELAPSED_TIME = 0;
   /**
    * Create instructions for home.
-   *
-   * <p>100m/10s to first step, 150m/15s to second step, 100m/10s to destination.
-   *
-   * <p>Total 350m, 35s. Updates every 5 seconds.
    */
   public static List<Instruction> getNavigateHome(CarContext carContext) {
     ArrayList<Instruction> instructions = new ArrayList<>();
@@ -124,6 +144,7 @@ public class DemoScripts {
             .setRoad("Google Kirkland.")
             .build();
 
+    // Start the navigation and add destination and steps.
     instructions.add(
         Instruction.builder(Instruction.Type.START_NAVIGATION, INSTRUCTION_NO_ELAPSED_TIME)
             .build());
@@ -155,6 +176,7 @@ public class DemoScripts {
             .setStep(step4)
             .build());
 
+    // Add trip positions for each step.
     instructions.addAll(
         generateTripUpdateSequence(
             /* count= */ 4,
@@ -185,6 +207,7 @@ public class DemoScripts {
             "6th Street",
             /* speed= */ 10));
 
+    // Set arrived state and then stop navigation.
     instructions.add(
         Instruction.builder(Instruction.Type.SET_ARRIVED, TimeUnit.SECONDS.toMillis(5)).build());
 
@@ -216,6 +239,8 @@ public class DemoScripts {
   }
 
   /**
+   * Generates all the updates for a particular step interpolating along a straight line.
+   *
    * @param count number of instructions to generate until the next step
    * @param startDestinationDistanceRemaining the distance until the final destination at the start
    *     of the sequence
@@ -270,6 +295,7 @@ public class DemoScripts {
     return Maneuver.builder(type).setIcon(getTurnIcon(carContext, type)).build();
   }
 
+  /** Returns a maneuver that includes an exit number with image selected from resources. */
   private static Maneuver getManeuverWithExitNumber(
       CarContext carContext, int type, int exitNumber) {
     return Maneuver.builder(type)
@@ -278,6 +304,9 @@ public class DemoScripts {
         .build();
   }
 
+  /**
+   * Returns a maneuver that includes an exit number and angle with image selected from resources.
+   */
   private static Maneuver getManeuverWithExitNumberAndAngle(
       CarContext carContext, int type, int exitNumber, int exitAngle) {
     return Maneuver.builder(type)
@@ -287,6 +316,7 @@ public class DemoScripts {
         .build();
   }
 
+  /** Generates a {@link CarIcon} representing the turn. */
   private static CarIcon getTurnIcon(CarContext carContext, int type) {
     int resourceId = R.drawable.ic_launcher;
     switch (type) {

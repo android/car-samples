@@ -25,11 +25,24 @@ import com.google.android.libraries.car.app.navigation.model.TravelEstimate;
 /**
  * Container for scripting navigation instructions.
  *
- * <p>For example things which are triggered based on a users location changing can be put into the
- * script to simulate driving without having to provide a full location mockup.
+ * <p>Each {@link Instruction} represents a change (delta) in the state of navigation corresponding
+ * to a change in state that could occur during a real navigation session. In general a script
+ * follows the following rough outline similar to a driving sessions:
  *
- * <p>In addition to a {@link Type}, each instruction has a length. All other parameters are
- * optional and related directly to which instruction is specified.
+ * <ul>
+ *   <li>Start Navigation
+ *   <li>Add one or more destinations (as would be selected by a driver)
+ *   <li>Add one or more steps (as would be provided by a routing algorithm)
+ *   <li>Add updated positions until the next step is reached.
+ *   <li>pop a step and send positions until the next step is reached.
+ *   <li>Repeat until all steps are popped.
+ *   <li>End Navigation.
+ * </ul>
+ *
+ * <p>In addition to a {@link Type}, each instruction specifies the duration until the next
+ * instruction should be executed. A duration of zero allows multiple instructions to be stacked up
+ * as if they were a single instruction. All other parameters are optional and related directly to
+ * which instruction is specified.
  */
 public class Instruction {
 
@@ -46,7 +59,7 @@ public class Instruction {
   };
 
   private final Type mType;
-  private final long mLengthMillis;
+  private final long mDurationMillis;
 
   // Only support a single destination at the moment.
   @Nullable private final Destination mDestination;
@@ -63,8 +76,8 @@ public class Instruction {
     return new Builder(type, lengthMs);
   }
 
-  public long getLengthMillis() {
-    return mLengthMillis;
+  public long getDurationMillis() {
+    return mDurationMillis;
   }
 
   public Type getType() {
@@ -103,7 +116,7 @@ public class Instruction {
 
   private Instruction(Builder builder) {
     mType = builder.mType;
-    mLengthMillis = builder.mLengthMs;
+    mDurationMillis = builder.mDurationMillis;
     mDestination = builder.mDestination;
     mStep = builder.mStep;
     mStepRemainingDistance = builder.mStepRemainingDistance;
@@ -115,7 +128,7 @@ public class Instruction {
   /** Builder for creating an {@link Instruction}. */
   public static final class Builder {
     private Type mType;
-    private long mLengthMs;
+    private long mDurationMillis;
     @Nullable private Destination mDestination;
     @Nullable private Step mStep;
     @Nullable private Distance mStepRemainingDistance;
@@ -123,9 +136,9 @@ public class Instruction {
     @Nullable private TravelEstimate mDestinationTravelEstimate;
     @Nullable private String mRoad;
 
-    public Builder(Type type, long lengthMs) {
+    public Builder(Type type, long durationMillis) {
       mType = type;
-      mLengthMs = lengthMs;
+      mDurationMillis = durationMillis;
     }
 
     Builder setDestination(@Nullable Destination destination) {

@@ -55,6 +55,6 @@ public class Script {
     Instruction instruction = mInstructions.get(mCurrentInstruction);
     mRunnable.run(instruction);
     mCurrentInstruction++;
-    mHandler.postDelayed(this::nextInstruction, instruction.getLengthMillis());
+    mHandler.postDelayed(this::nextInstruction, instruction.getDurationMillis());
   }
 }
