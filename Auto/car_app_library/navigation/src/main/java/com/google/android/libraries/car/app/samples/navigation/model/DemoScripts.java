@@ -157,7 +157,13 @@ public class DemoScripts {
             .build());
 
     instructions.add(
-        Instruction.builder(Instruction.Type.SET_REROUTING, TimeUnit.SECONDS.toMillis(5)).build());
+        Instruction.builder(Instruction.Type.SET_REROUTING, TimeUnit.SECONDS.toMillis(5))
+            .setDestinationTravelEstimate(
+                TravelEstimate.create(
+                    Distance.create(350, Distance.UNIT_METERS),
+                    /* remainingSeconds= */ 350 / 10,
+                    arrivalTimeAtDestination))
+            .build());
 
     instructions.add(
         Instruction.builder(Instruction.Type.ADD_STEP_NAVIGATION, INSTRUCTION_NO_ELAPSED_TIME)

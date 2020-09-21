@@ -209,7 +209,8 @@ public class NavigationService extends Service {
                         .addDestinationTravelEstimate(destinationTravelEstimate)
                         .clearStepTravelEstimates()
                         .addStepTravelEstimate(stepTravelEstimate)
-                        .setCurrentRoad(instruction.getRoad());
+                        .setCurrentRoad(instruction.getRoad())
+                        .setIsLoading(false);
                     mNavigationManager.updateTrip(tripBuilder.build());
 
                     if (++mStepsSent % 10 == 0) {
@@ -231,6 +232,16 @@ public class NavigationService extends Service {
                   break;
                 case SET_REROUTING:
                   if (mIsNavigating) {
+                    TravelEstimate destinationTravelEstimate =
+                        instruction.getDestinationTravelEstimate();
+                    tripBuilder
+                        .clearDestinationTravelEstimates()
+                        .addDestinationTravelEstimate(destinationTravelEstimate)
+                        .clearSteps()
+                        .clearStepTravelEstimates()
+                        .setCurrentRoad(instruction.getRoad())
+                        .setIsLoading(true);
+                    mNavigationManager.updateTrip(tripBuilder.build());
                     if (mListener != null) {
                       mListener.navigationStateChanged(
                           /* isNavigating= */ true,
