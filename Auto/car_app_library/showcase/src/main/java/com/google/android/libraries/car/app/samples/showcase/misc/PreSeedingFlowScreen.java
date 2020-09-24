@@ -55,7 +55,7 @@ public class PreSeedingFlowScreen extends Screen {
                               // permission, or login.
                               finish();
                             }))
-                    .setTitle("Open Phone")
+                    .setTitle("Open On Phone")
                     .build(),
                 Action.builder()
                     .setOnClickListener(getCarContext()::finishCarApp)

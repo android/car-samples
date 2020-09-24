@@ -54,12 +54,14 @@ public class FinishAppScreen extends Screen {
                 Action.builder()
                     .setOnClickListener(
                         () -> {
-                          getCarContext()
-                              .getSharedPreferences(
-                                  ShowcaseService.SHARED_PREF_KEY, Context.MODE_PRIVATE)
-                              .edit()
-                              .putBoolean(ShowcaseService.PRE_SEED_KEY, true)
-                              .apply();
+                          if (mWillPreseed) {
+                            getCarContext()
+                                .getSharedPreferences(
+                                    ShowcaseService.SHARED_PREF_KEY, Context.MODE_PRIVATE)
+                                .edit()
+                                .putBoolean(ShowcaseService.PRE_SEED_KEY, true)
+                                .apply();
+                          }
                           getCarContext().finishCarApp();
                         })
                     .setTitle("Exit")
