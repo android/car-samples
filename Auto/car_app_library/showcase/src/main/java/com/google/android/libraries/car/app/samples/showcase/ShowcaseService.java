@@ -22,6 +22,7 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.res.Configuration;
 import android.net.Uri;
+import android.util.Log;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.lifecycle.DefaultLifecycleObserver;
@@ -152,6 +153,11 @@ public final class ShowcaseService extends CarAppService implements DefaultLifec
     if (mRenderer != null) {
       mRenderer.onCarConfigurationChanged();
     }
+  }
+
+  @Override
+  public void onCarAppFinished() {
+    Log.i("SHOWCASE", "onCarAppFinished");
   }
 
   public static Uri createDeepLinkUri(String deepLinkAction) {
