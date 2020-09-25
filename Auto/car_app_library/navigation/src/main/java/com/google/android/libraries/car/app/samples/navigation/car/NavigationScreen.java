@@ -41,6 +41,7 @@ import com.google.android.libraries.car.app.navigation.model.Step;
 import com.google.android.libraries.car.app.navigation.model.TravelEstimate;
 import com.google.android.libraries.car.app.samples.navigation.R;
 import com.google.android.libraries.car.app.samples.navigation.model.Instruction;
+import java.util.ArrayList;
 import java.util.List;
 
 /** Simple demo of how to present a trip on the routing screen. */
@@ -215,9 +216,15 @@ public final class NavigationScreen extends Screen {
     getScreenManager()
         .pushForResult(
             new FavoritesScreen(getCarContext(), mSettingsAction, mSurfaceRenderer),
-            (instructions) -> {
-              if (instructions != null) {
-                mListener.executeScript((List<Instruction>) instructions);
+            (obj) -> {
+              if (obj != null) {
+                // Need to copy over each element to satisfy Java type safety.
+                List<?> results = (List<?>) obj;
+                List<Instruction> instructions = new ArrayList<Instruction>();
+                for (Object result : results) {
+                  instructions.add((Instruction) result);
+                }
+                mListener.executeScript(instructions);
               }
             });
   }
