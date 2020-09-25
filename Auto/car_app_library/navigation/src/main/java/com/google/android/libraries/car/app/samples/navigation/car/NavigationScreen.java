@@ -54,6 +54,7 @@ public final class NavigationScreen extends Screen {
 
   @NonNull private final Listener mListener;
   @NonNull private final Action mSettingsAction;
+  @NonNull private final SurfaceRenderer mSurfaceRenderer;
 
   private boolean mIsNavigating;
   private boolean mIsRerouting;
@@ -65,11 +66,15 @@ public final class NavigationScreen extends Screen {
 
   private int state;
 
-  public NavigationScreen(@NonNull CarContext carContext, @NonNull Action settingsAction,
-      @NonNull Listener listener) {
+  public NavigationScreen(
+      @NonNull CarContext carContext,
+      @NonNull Action settingsAction,
+      @NonNull Listener listener,
+      SurfaceRenderer surfaceRenderer) {
     super(carContext);
     mListener = listener;
     mSettingsAction = settingsAction;
+    mSurfaceRenderer = surfaceRenderer;
   }
 
   public void updateTrip(
@@ -93,6 +98,9 @@ public final class NavigationScreen extends Screen {
   @NonNull
   @Override
   public Template getTemplate() {
+    mSurfaceRenderer.updateMarkerVisibility(
+        /* showMarkers=*/ false, /* numMarkers=*/ 0, /* activeMarker=*/ -1);
+
     NavigationTemplate.Builder builder = NavigationTemplate.builder();
     builder.setBackgroundColor(CarColor.SECONDARY);
 
@@ -206,7 +214,7 @@ public final class NavigationScreen extends Screen {
   private void openFavorites() {
     getScreenManager()
         .pushForResult(
-            new FavoritesScreen(getCarContext(), mSettingsAction),
+            new FavoritesScreen(getCarContext(), mSettingsAction, mSurfaceRenderer),
             (instructions) -> {
               if (instructions != null) {
                 mListener.executeScript((List<Instruction>) instructions);

@@ -39,12 +39,18 @@ public final class SurfaceRenderer implements DefaultLifecycleObserver {
   private static final String TAG = "SurfaceRenderer";
 
   private final CarContext mCarContext;
-  private @Nullable Surface mSurface;
-  private @Nullable Rect mVisibleArea;
-  private @Nullable Rect mStableArea;
   private final Paint mLeftInsetPaint = new Paint();
   private final Paint mRightInsetPaint = new Paint();
   private final Paint mCenterPaint = new Paint();
+  private final Paint mMarkerPaint = new Paint();
+
+  private @Nullable Surface mSurface;
+  private @Nullable Rect mVisibleArea;
+  private @Nullable Rect mStableArea;
+
+  private boolean mShowMarkers;
+  private int mNumMarkers;
+  private int mActiveMarker;
 
   private final SurfaceListener mSurfaceListener =
       new SurfaceListener() {
@@ -108,6 +114,11 @@ public final class SurfaceRenderer implements DefaultLifecycleObserver {
     mCenterPaint.setAntiAlias(true);
     mCenterPaint.setStyle(Style.STROKE);
 
+    mMarkerPaint.setColor(Color.GREEN);
+    mMarkerPaint.setAntiAlias(true);
+    mMarkerPaint.setStyle(Style.STROKE);
+    mMarkerPaint.setStrokeWidth(3);
+
     lifecycle.addObserver(this);
   }
 
@@ -118,6 +129,13 @@ public final class SurfaceRenderer implements DefaultLifecycleObserver {
   }
 
   public void onCarConfigurationChanged() {
+    renderFrame();
+  }
+
+  public void updateMarkerVisibility(boolean showMarkers, int numMarkers, int activeMarker) {
+    mShowMarkers = showMarkers;
+    mNumMarkers = numMarkers;
+    mActiveMarker = activeMarker;
     renderFrame();
   }
 
@@ -185,6 +203,33 @@ public final class SurfaceRenderer implements DefaultLifecycleObserver {
     } else {
       Log.d(TAG, "Stable area not available.");
     }
+
+    if (mShowMarkers) {
+      // Show a set number of markers centered around the midpoint of the stable area. If no
+      // stable area, then use visible area or canvas dimensions. If an active marker is set draw
+      // a line from the center to that marker.
+      Rect markerArea =
+          mStableArea != null
+              ? mStableArea
+              : (mVisibleArea != null
+                  ? mVisibleArea
+                  : new Rect(0, 0, canvas.getWidth() - 1, canvas.getHeight()));
+      int centerX = markerArea.centerX();
+      int centerY = markerArea.centerY();
+      double radius = Math.min(centerX / 2, centerY / 2);
+
+      double circleAngle = 2.0d * Math.PI;
+      double markerpiece = circleAngle / mNumMarkers;
+      for (int i = 0; i < mNumMarkers; i++) {
+        int markerX = centerX + (int) (radius * Math.cos(markerpiece * i));
+        int markerY = centerY + (int) (radius * Math.sin(markerpiece * i));
+        canvas.drawCircle(markerX, markerY, 5, mMarkerPaint);
+        if (i == mActiveMarker) {
+          canvas.drawLine(centerX, centerY, markerX, markerY, mMarkerPaint);
+        }
+      }
+    }
+
     mSurface.unlockCanvasAndPost(canvas);
   }
 }

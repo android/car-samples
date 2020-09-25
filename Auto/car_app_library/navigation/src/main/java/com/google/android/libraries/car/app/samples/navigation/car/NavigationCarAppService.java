@@ -172,7 +172,8 @@ public final class NavigationCarAppService extends CarAppService
             .build();
 
     mNavigationCarSurface = new SurfaceRenderer(getCarContext(), getLifecycle());
-    mNavigationScreen = new NavigationScreen(getCarContext(), settingsAction, this);
+    mNavigationScreen =
+        new NavigationScreen(getCarContext(), settingsAction, this, mNavigationCarSurface);
 
     if (CarContext.ACTION_NAVIGATE.equals(intent.getAction())) {
       CarToast.makeText(

@@ -30,6 +30,8 @@ import com.google.android.libraries.car.app.model.Row;
 import com.google.android.libraries.car.app.model.Template;
 import com.google.android.libraries.car.app.navigation.model.RoutePreviewNavigationTemplate;
 import com.google.android.libraries.car.app.samples.navigation.R;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 /** The route preview screen for the app. */
@@ -37,18 +39,20 @@ public final class RoutePreviewScreen extends Screen {
   private static final String TAG = "NavigationDemo";
 
   @NonNull private final Action mSettingsAction;
+  @NonNull private final SurfaceRenderer mSurfaceRenderer;
+  @NonNull private final List<Row> routeRows;
 
   int mLastSelectedIndex = -1;
 
-  public RoutePreviewScreen(@NonNull CarContext carContext, @NonNull Action settingsAction) {
+  public RoutePreviewScreen(
+      @NonNull CarContext carContext,
+      @NonNull Action settingsAction,
+      SurfaceRenderer surfaceRenderer) {
     super(carContext);
     mSettingsAction = settingsAction;
-  }
+    mSurfaceRenderer = surfaceRenderer;
 
-  @NonNull
-  @Override
-  public Template getTemplate() {
-    Log.i(TAG, "In RoutePreviewScreen.getTemplate()");
+    routeRows = new ArrayList<>();
     SpannableString firstRoute = new SpannableString("   \u00b7 Shortest route");
     firstRoute.setSpan(create(TimeUnit.HOURS.toSeconds(26)), 0, 1, 0);
     SpannableString secondRoute = new SpannableString("   \u00b7 Less busy");
@@ -56,14 +60,24 @@ public final class RoutePreviewScreen extends Screen {
     SpannableString thirdRoute = new SpannableString("   \u00b7 HOV friendly");
     thirdRoute.setSpan(create(TimeUnit.MINUTES.toSeconds(867)), 0, 1, 0);
 
+    routeRows.add(Row.builder().setTitle(firstRoute).addText("Via NE 8th Street").build());
+    routeRows.add(Row.builder().setTitle(secondRoute).addText("Via NE 1st Ave").build());
+    routeRows.add(Row.builder().setTitle(thirdRoute).addText("Via NE 4th Street").build());
+  }
+
+  @NonNull
+  @Override
+  public Template getTemplate() {
+    Log.i(TAG, "In RoutePreviewScreen.getTemplate()");
+    onRouteSelected(0);
+
     ItemList.Builder listBuilder = ItemList.builder();
     listBuilder
         .setSelectable(this::onRouteSelected)
-        .addItem(Row.builder().setTitle(firstRoute).addText("Via NE 8th Street").build())
-        .addItem(Row.builder().setTitle(secondRoute).addText("Via NE 1st Ave").build())
-        .addItem(Row.builder().setTitle(thirdRoute).addText("Via NE 4th Street").build())
         .setOnItemsVisibilityChangeListener(this::onRoutesVisible);
-
+    for (Row row : routeRows) {
+      listBuilder.addItem(row);
+    }
     return RoutePreviewNavigationTemplate.builder()
         .setItemList(listBuilder.build())
         .setTitle(getCarContext().getString(R.string.route_preview))
@@ -79,6 +93,10 @@ public final class RoutePreviewScreen extends Screen {
 
   private void onRouteSelected(int index) {
     mLastSelectedIndex = index;
+    mSurfaceRenderer.updateMarkerVisibility(
+        /* showMarkers=*/ true,
+        /* numMarkers=*/ routeRows.size(),
+        /* activeMarker=*/ mLastSelectedIndex);
   }
 
   private void onRoutesVisible(int startIndex, int endIndex) {

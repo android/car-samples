@@ -47,16 +47,23 @@ public final class FavoritesScreen extends Screen {
 
   @Nullable private List<PlaceInfo> mFavorites;
   @NonNull private final Action mSettingsAction;
+  @NonNull private final SurfaceRenderer mSurfaceRenderer;
 
-  public FavoritesScreen(@NonNull CarContext carContext, @NonNull Action settingsAction) {
+  public FavoritesScreen(
+      @NonNull CarContext carContext,
+      @NonNull Action settingsAction,
+      SurfaceRenderer surfaceRenderer) {
     super(carContext);
     mSettingsAction = settingsAction;
+    mSurfaceRenderer = surfaceRenderer;
   }
 
   @NonNull
   @Override
   public Template getTemplate() {
     Log.i(TAG, "In FavoritesScreen.getTemplate()");
+    mSurfaceRenderer.updateMarkerVisibility(
+        /* showMarkers=*/ false, /* numMarkers=*/ 0, /* activeMarker=*/ -1);
     ItemList.Builder listBuilder = ItemList.builder();
 
     for (PlaceInfo place : getFavorites()) {
@@ -85,7 +92,8 @@ public final class FavoritesScreen extends Screen {
   private void onClickFavorite(@NonNull PlaceInfo place) {
     getScreenManager()
         .pushForResult(
-            new RoutePreviewScreen(getCarContext(), mSettingsAction), this::onRoutePreviewResult);
+            new RoutePreviewScreen(getCarContext(), mSettingsAction, mSurfaceRenderer),
+            this::onRoutePreviewResult);
   }
 
   private void onRoutePreviewResult(@Nullable Object previewResult) {
