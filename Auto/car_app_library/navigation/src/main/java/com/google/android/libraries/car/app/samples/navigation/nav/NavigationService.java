@@ -17,14 +17,17 @@
 package com.google.android.libraries.car.app.samples.navigation.nav;
 
 import static android.media.AudioManager.AUDIOFOCUS_REQUEST_GRANTED;
+import static com.google.android.libraries.car.app.samples.navigation.nav.DeepLinkNotificationReceiver.INTENT_ACTION_NAV_NOTIFICATION_OPEN_APP;
 
 import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
+import android.content.ComponentName;
 import android.content.Intent;
 import android.content.res.AssetFileDescriptor;
+import android.graphics.BitmapFactory;
 import android.media.AudioAttributes;
 import android.media.AudioFocusRequest;
 import android.media.AudioManager;
@@ -32,10 +35,12 @@ import android.media.MediaPlayer;
 import android.os.Binder;
 import android.os.Build;
 import android.os.IBinder;
+import android.text.TextUtils;
 import android.util.Log;
 import androidx.annotation.Nullable;
 import androidx.annotation.RawRes;
 import androidx.core.app.NotificationCompat;
+import androidx.core.app.NotificationManagerCompat;
 import com.google.android.libraries.car.app.CarContext;
 import com.google.android.libraries.car.app.CarToast;
 import com.google.android.libraries.car.app.model.Distance;
@@ -45,6 +50,7 @@ import com.google.android.libraries.car.app.navigation.model.Destination;
 import com.google.android.libraries.car.app.navigation.model.Step;
 import com.google.android.libraries.car.app.navigation.model.TravelEstimate;
 import com.google.android.libraries.car.app.navigation.model.Trip;
+import com.google.android.libraries.car.app.notification.CarAppExtender;
 import com.google.android.libraries.car.app.samples.navigation.R;
 import com.google.android.libraries.car.app.samples.navigation.app.MainActivity;
 import com.google.android.libraries.car.app.samples.navigation.model.Instruction;
@@ -218,16 +224,17 @@ public class NavigationService extends Service {
                       playNavigationDirection(R.raw.turn_right);
                     }
 
-                    if (mListener != null) {
-                      mListener.navigationStateChanged(
-                          /* isNavigating= */ true,
-                          /* isRerouting= */ false,
-                          /* hasArrived= */ false,
-                          destinations,
-                          steps,
-                          destinationTravelEstimate,
-                          instruction.getStepRemainingDistance());
-                    }
+                    update(
+                        /* isNavigating= */ true,
+                        /* isRerouting= */ false,
+                        /* hasArrived= */ false,
+                        destinations,
+                        steps,
+                        destinationTravelEstimate,
+                        instruction.getStepRemainingDistance(),
+                        instruction.getShouldNotify(),
+                        instruction.getNotificationString(),
+                        instruction.getNotificationIcon());
                   }
                   break;
                 case SET_REROUTING:
@@ -242,34 +249,65 @@ public class NavigationService extends Service {
                         .setCurrentRoad(instruction.getRoad())
                         .setIsLoading(true);
                     mNavigationManager.updateTrip(tripBuilder.build());
-                    if (mListener != null) {
-                      mListener.navigationStateChanged(
-                          /* isNavigating= */ true,
-                          /* isRerouting= */ true,
-                          /* hasArrived= */ false,
-                          null,
-                          null,
-                          null,
-                          null);
-                    }
+                    update(
+                        /* isNavigating= */ true,
+                        /* isRerouting= */ true,
+                        /* hasArrived= */ false,
+                        null,
+                        null,
+                        null,
+                        null,
+                        instruction.getShouldNotify(),
+                        instruction.getNotificationString(),
+                        instruction.getNotificationIcon());
                   }
                   break;
                 case SET_ARRIVED:
                   if (mIsNavigating) {
-                    if (mListener != null) {
-                      mListener.navigationStateChanged(
-                          /* isNavigating= */ true,
-                          /* isRerouting= */ false,
-                          /* hasArrived= */ true,
-                          destinations,
-                          null,
-                          null,
-                          null);
-                    }
+                    update(
+                        /* isNavigating= */ true,
+                        /* isRerouting= */ false,
+                        /* hasArrived= */ true,
+                        destinations,
+                        null,
+                        null,
+                        null,
+                        instruction.getShouldNotify(),
+                        instruction.getNotificationString(),
+                        instruction.getNotificationIcon());
                   }
                   break;
               }
             });
+  }
+
+  void update(
+      boolean isNavigating,
+      boolean isRerouting,
+      boolean hasArrived,
+      List<Destination> destinations,
+      List<Step> steps,
+      TravelEstimate nextDestinationTravelEstimate,
+      Distance nextStepRemainingDistance,
+      boolean shouldNotify,
+      @Nullable String notificationString,
+      int notificationIcon) {
+    if (mListener != null) {
+      mListener.navigationStateChanged(
+          isNavigating,
+          isRerouting,
+          hasArrived,
+          destinations,
+          steps,
+          nextDestinationTravelEstimate,
+          nextStepRemainingDistance);
+    }
+
+    if (mNotificationManager != null && !TextUtils.isEmpty(notificationString)) {
+      mNotificationManager.notify(
+          NOTIFICATION_ID,
+          getNotification(shouldNotify, true, notificationString, notificationIcon));
+    }
   }
 
   public boolean getIsNavigating() {
@@ -281,7 +319,10 @@ public class NavigationService extends Service {
     startService(new Intent(getApplicationContext(), NavigationService.class));
 
     Log.i(TAG, "Starting foreground service");
-    startForeground(NOTIFICATION_ID, getNotification());
+    startForeground(
+        NOTIFICATION_ID,
+        getNotification(
+            true, false, getString(R.string.navigation_active), R.drawable.ic_launcher));
 
     if (mNavigationManager != null) {
       mNavigationManager.navigationStarted();
@@ -402,15 +443,21 @@ public class NavigationService extends Service {
   }
 
   /** Returns the {@link NotificationCompat} used as part of the foreground service. */
-  private Notification getNotification() {
-    CharSequence navigatingDisplayString = getString(R.string.navigation_active);
+  private Notification getNotification(
+      boolean shouldNotify,
+      boolean showInCar,
+      CharSequence navigatingDisplayString,
+      int notificationIcon) {
     NotificationCompat.Builder builder =
         new NotificationCompat.Builder(this, CHANNEL_ID)
             .setContentIntent(createMainActivityPendingIntent())
-            .addAction(0, "STOP", createStopPendingIntent())
+            // .addAction(0, "STOP", createStopPendingIntent())
             .setContentTitle(navigatingDisplayString)
             .setOngoing(true)
+            .setCategory(NotificationCompat.CATEGORY_NAVIGATION)
+            .setOnlyAlertOnce(!shouldNotify)
             .setSmallIcon(R.drawable.ic_launcher)
+            .setLargeIcon(BitmapFactory.decodeResource(getResources(), notificationIcon))
             .setTicker(navigatingDisplayString)
             .setWhen(System.currentTimeMillis());
 
@@ -418,7 +465,26 @@ public class NavigationService extends Service {
       builder.setChannelId(CHANNEL_ID);
       builder.setPriority(NotificationManager.IMPORTANCE_HIGH);
     }
+    if (showInCar) {
+      builder
+          .extend(
+              CarAppExtender.builder()
+                  .setImportance(NotificationManagerCompat.IMPORTANCE_HIGH)
+                  .setContentIntent(
 
+                      // Set an intent to open the car app. The app receives this intent when the
+                      // user taps the heads-up notification or the rail widget.
+                      PendingIntent.getBroadcast(
+                          this,
+                          INTENT_ACTION_NAV_NOTIFICATION_OPEN_APP.hashCode(),
+                          new Intent(INTENT_ACTION_NAV_NOTIFICATION_OPEN_APP)
+                              .setComponent(
+                                  new ComponentName(
+                                      mCarContext, DeepLinkNotificationReceiver.class)),
+                          0))
+                  .build())
+          .build();
+    }
     return builder.build();
   }
 

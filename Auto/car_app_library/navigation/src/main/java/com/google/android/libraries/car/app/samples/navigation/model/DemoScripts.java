@@ -113,6 +113,9 @@ import java.util.concurrent.TimeUnit;
 public class DemoScripts {
 
   private static long INSTRUCTION_NO_ELAPSED_TIME = 0;
+  private static int SPEED_METERS_PER_SEC = 5;
+  private static int DISTANCE_METERS = 450;
+
   /**
    * Create instructions for home.
    */
@@ -121,26 +124,37 @@ public class DemoScripts {
 
     DateTimeWithZone arrivalTimeAtDestination = getCurrentDateTimeZoneWithOffset(30);
 
+    int step1IconResourceId =
+        getTurnIconResourceId(Maneuver.TYPE_ROUNDABOUT_ENTER_AND_EXIT_CCW_WITH_ANGLE);
     Step step1 =
         Step.builder("State Street")
             .setManeuver(
                 getManeuverWithExitNumberAndAngle(
-                    carContext, Maneuver.TYPE_ROUNDABOUT_ENTER_AND_EXIT_CCW_WITH_ANGLE, 2, 270))
+                    carContext,
+                    Maneuver.TYPE_ROUNDABOUT_ENTER_AND_EXIT_CCW_WITH_ANGLE,
+                    step1IconResourceId,
+                    2,
+                    270))
             .setRoad("State Street")
             .build();
+    int step2IconResourceId = getTurnIconResourceId(Maneuver.TYPE_TURN_NORMAL_LEFT);
     Step step2 =
         Step.builder("Kirkland Way")
-            .setManeuver(getManeuver(carContext, Maneuver.TYPE_TURN_NORMAL_LEFT))
+            .setManeuver(
+                getManeuver(carContext, Maneuver.TYPE_TURN_NORMAL_LEFT, step2IconResourceId))
             .setRoad("Kirkland Way")
             .build();
+    int step3IconResourceId = getTurnIconResourceId(Maneuver.TYPE_TURN_NORMAL_RIGHT);
     Step step3 =
         Step.builder("6th Street.")
-            .setManeuver(getManeuver(carContext, Maneuver.TYPE_TURN_NORMAL_RIGHT))
+            .setManeuver(
+                getManeuver(carContext, Maneuver.TYPE_TURN_NORMAL_RIGHT, step3IconResourceId))
             .setRoad("6th Street.")
             .build();
+    int step4IconResourceId = getTurnIconResourceId(Maneuver.TYPE_DESTINATION_RIGHT);
     Step step4 =
         Step.builder("Google Kirkland.")
-            .setManeuver(getManeuver(carContext, TYPE_DESTINATION_RIGHT))
+            .setManeuver(getManeuver(carContext, TYPE_DESTINATION_RIGHT, step4IconResourceId))
             .setRoad("Google Kirkland.")
             .build();
 
@@ -161,8 +175,9 @@ public class DemoScripts {
             .setDestinationTravelEstimate(
                 TravelEstimate.create(
                     Distance.create(350, Distance.UNIT_METERS),
-                    /* remainingSeconds= */ 350 / 10,
+                    /* remainingSeconds= */ DISTANCE_METERS / SPEED_METERS_PER_SEC,
                     arrivalTimeAtDestination))
+            .setNotification(true, "Rerouting...", R.drawable.ic_launcher)
             .build());
 
     instructions.add(
@@ -183,35 +198,62 @@ public class DemoScripts {
             .build());
 
     // Add trip positions for each step.
+    int updateDistanceRemaining = DISTANCE_METERS;
     instructions.addAll(
         generateTripUpdateSequence(
             /* count= */ 4,
-            /* startDestinationDistanceRemaining= */ 350,
+            /* startDestinationDistanceRemaining= */ updateDistanceRemaining,
             /* startStepDistanceRemaining= */ 100,
             arrivalTimeAtDestination,
             "3rd Street",
-            /* speed= */ 10));
-    instructions.add(Instruction.builder(Instruction.Type.POP_STEP_NAVIGATION, 0).build());
+            "onto State Street",
+            SPEED_METERS_PER_SEC,
+            step1IconResourceId));
+    instructions.add(
+        Instruction.builder(Instruction.Type.POP_STEP_NAVIGATION, INSTRUCTION_NO_ELAPSED_TIME)
+            .build());
+    updateDistanceRemaining -= 100;
 
     instructions.addAll(
         generateTripUpdateSequence(
             /* count= */ 6,
-            /* startDestinationDistanceRemaining= */ 250,
+            /* startDestinationDistanceRemaining= */ updateDistanceRemaining,
             /* startStepDistanceRemaining= */ 150,
             arrivalTimeAtDestination,
             "State Street",
-            /* speed= */ 10));
+            "onto Kirkland Way",
+            SPEED_METERS_PER_SEC,
+            step2IconResourceId));
     instructions.add(
         Instruction.builder(Instruction.Type.POP_STEP_NAVIGATION, INSTRUCTION_NO_ELAPSED_TIME)
             .build());
+    updateDistanceRemaining -= 150;
+
     instructions.addAll(
         generateTripUpdateSequence(
             /* count= */ 4,
-            /* startDestinationDistanceRemaining= */ 100,
+            /* startDestinationDistanceRemaining= */ updateDistanceRemaining,
+            /* startStepDistanceRemaining= */ 100,
+            arrivalTimeAtDestination,
+            "Kirkland Way",
+            "onto 6th Street",
+            SPEED_METERS_PER_SEC,
+            step3IconResourceId));
+    instructions.add(
+        Instruction.builder(Instruction.Type.POP_STEP_NAVIGATION, INSTRUCTION_NO_ELAPSED_TIME)
+            .build());
+    updateDistanceRemaining -= 100;
+
+    instructions.addAll(
+        generateTripUpdateSequence(
+            /* count= */ 4,
+            /* startDestinationDistanceRemaining= */ updateDistanceRemaining,
             /* startStepDistanceRemaining= */ 100,
             arrivalTimeAtDestination,
             "6th Street",
-            /* speed= */ 10));
+            "to Google Kirkland on right",
+            SPEED_METERS_PER_SEC,
+            step4IconResourceId));
 
     // Set arrived state and then stop navigation.
     instructions.add(
@@ -252,7 +294,7 @@ public class DemoScripts {
    *     of the sequence
    * @param startStepDistanceRemaining the distance until the next step at the start of the sequence
    * @param arrivalTimeAtDestination the arrival time at the destination
-   * @param road the name of the road currently being travelled
+   * @param currentRoad the name of the road currently being travelled
    * @param speed meters/second being traveled
    * @return sequence of instructions until the next step
    */
@@ -261,12 +303,15 @@ public class DemoScripts {
       int startDestinationDistanceRemaining,
       int startStepDistanceRemaining,
       DateTimeWithZone arrivalTimeAtDestination,
-      String road,
-      int speed) {
+      String currentRoad,
+      String nextInstruction,
+      int speed,
+      int notificationIcon) {
     List<Instruction> sequence = new ArrayList<>(count);
     int destinationDistanceRemaining = startDestinationDistanceRemaining;
     int stepDistanceRemaining = startStepDistanceRemaining;
     int distanceIncrement = startStepDistanceRemaining / count;
+    boolean notify = true;
 
     for (int i = 0; i < count; i++) {
       Distance remainingDistance = Distance.create(stepDistanceRemaining, Distance.UNIT_METERS);
@@ -280,6 +325,7 @@ public class DemoScripts {
               remainingDistance,
               /* timeToStep= */ distanceIncrement,
               getCurrentDateTimeZoneWithOffset(distanceIncrement));
+      String notificationString = String.format("%dm %s", stepDistanceRemaining, nextInstruction);
       sequence.add(
           Instruction.builder(
                   Instruction.Type.SET_TRIP_POSITION_NAVIGATION,
@@ -287,25 +333,27 @@ public class DemoScripts {
               .setStepRemainingDistance(remainingDistance)
               .setStepTravelEstimate(stepTravelEstimate)
               .setDestinationTravelEstimate(destinationTravelEstimate)
-              .setRoad(road)
+              .setRoad(currentRoad)
+              .setNotification(notify, notificationString, notificationIcon)
               .build());
 
       destinationDistanceRemaining -= distanceIncrement;
       stepDistanceRemaining -= distanceIncrement;
+      notify = false;
     }
     return sequence;
   }
 
   /** Returns a maneuver with image selected from resources. */
-  private static Maneuver getManeuver(CarContext carContext, int type) {
-    return Maneuver.builder(type).setIcon(getTurnIcon(carContext, type)).build();
+  private static Maneuver getManeuver(CarContext carContext, int type, int iconResourceId) {
+    return Maneuver.builder(type).setIcon(getCarIcon(carContext, iconResourceId)).build();
   }
 
   /** Returns a maneuver that includes an exit number with image selected from resources. */
   private static Maneuver getManeuverWithExitNumber(
-      CarContext carContext, int type, int exitNumber) {
+      CarContext carContext, int type, int iconResourceId, int exitNumber) {
     return Maneuver.builder(type)
-        .setIcon(getTurnIcon(carContext, type))
+        .setIcon(getCarIcon(carContext, iconResourceId))
         .setRoundaboutExitNumber(exitNumber)
         .build();
   }
@@ -314,16 +362,20 @@ public class DemoScripts {
    * Returns a maneuver that includes an exit number and angle with image selected from resources.
    */
   private static Maneuver getManeuverWithExitNumberAndAngle(
-      CarContext carContext, int type, int exitNumber, int exitAngle) {
+      CarContext carContext, int type, int iconResourceId, int exitNumber, int exitAngle) {
     return Maneuver.builder(type)
-        .setIcon(getTurnIcon(carContext, type))
+        .setIcon(getCarIcon(carContext, iconResourceId))
         .setRoundaboutExitNumber(exitNumber)
         .setRoundaboutExitAngle(exitAngle)
         .build();
   }
 
   /** Generates a {@link CarIcon} representing the turn. */
-  private static CarIcon getTurnIcon(CarContext carContext, int type) {
+  private static CarIcon getCarIcon(CarContext carContext, int resourceId) {
+    return CarIcon.builder(IconCompat.createWithResource(carContext, resourceId)).build();
+  }
+
+  private static int getTurnIconResourceId(int type) {
     int resourceId = R.drawable.ic_launcher;
     switch (type) {
       case TYPE_TURN_NORMAL_LEFT:
@@ -410,7 +462,7 @@ public class DemoScripts {
       default:
         throw new IllegalStateException("Unexpected maneuver type: " + type);
     }
-    return CarIcon.builder(IconCompat.createWithResource(carContext, resourceId)).build();
+    return resourceId;
   }
 
   private DemoScripts() {}

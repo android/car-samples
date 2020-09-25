@@ -70,6 +70,9 @@ public class Instruction {
   @Nullable private final TravelEstimate mStepTravelEstimate;
   @Nullable private final TravelEstimate mDestinationTravelEstimate;
   @Nullable private final String mRoad;
+  @Nullable private final String mNotificationString;
+  private final int mNotificationIcon;
+  private final boolean mShouldNotify;
 
   /** Constructs a new builder of {@link Instruction}. */
   public static Builder builder(Type type, long lengthMs) {
@@ -114,6 +117,19 @@ public class Instruction {
     return mRoad;
   }
 
+  @Nullable
+  public String getNotificationString() {
+    return mNotificationString;
+  }
+
+  public int getNotificationIcon() {
+    return mNotificationIcon;
+  }
+
+  public boolean getShouldNotify() {
+    return mShouldNotify;
+  }
+
   private Instruction(Builder builder) {
     mType = builder.mType;
     mDurationMillis = builder.mDurationMillis;
@@ -123,6 +139,9 @@ public class Instruction {
     mStepTravelEstimate = builder.mStepTravelEstimate;
     mDestinationTravelEstimate = builder.mDestinationTravelEstimate;
     mRoad = builder.mRoad;
+    mNotificationString = builder.mNotificationString;
+    mNotificationIcon = builder.mNotificationIcon;
+    mShouldNotify = builder.mShouldNotify;
   }
 
   /** Builder for creating an {@link Instruction}. */
@@ -135,6 +154,9 @@ public class Instruction {
     @Nullable private TravelEstimate mStepTravelEstimate;
     @Nullable private TravelEstimate mDestinationTravelEstimate;
     @Nullable private String mRoad;
+    @Nullable private String mNotificationString;
+    @Nullable private int mNotificationIcon;
+    private boolean mShouldNotify;
 
     public Builder(Type type, long durationMillis) {
       mType = type;
@@ -168,6 +190,14 @@ public class Instruction {
 
     Builder setRoad(@Nullable String road) {
       mRoad = road;
+      return this;
+    }
+
+    Builder setNotification(
+        boolean shouldNotify, @Nullable String notificationString, int notificationIcon) {
+      mNotificationString = notificationString;
+      mShouldNotify = shouldNotify;
+      mNotificationIcon = notificationIcon;
       return this;
     }
 

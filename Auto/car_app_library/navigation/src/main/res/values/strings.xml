@@ -18,6 +18,8 @@
 <resources>
   <string name="app_name" translatable="false">Navigation</string>
   <string name="navigation_active" translatable="false">Navigating...</string>
+  <string name="navigation_rerouting" translatable="false">Rerouting...</string>
+  <string name="navigation_arrived" translatable="false">Arrived...</string>
   <string name="home_destination_label" translatable="false">Home</string>
   <string name="work_destination_label" translatable="false">Work</string>
   <string name="route_preview" translatable="false">Routes</string>

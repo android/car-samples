@@ -21,6 +21,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.content.res.Configuration;
+import android.net.Uri;
 import android.os.IBinder;
 import android.util.Log;
 import androidx.annotation.NonNull;
@@ -43,6 +44,7 @@ import com.google.android.libraries.car.app.navigation.model.Step;
 import com.google.android.libraries.car.app.navigation.model.TravelEstimate;
 import com.google.android.libraries.car.app.samples.navigation.R;
 import com.google.android.libraries.car.app.samples.navigation.model.Instruction;
+import com.google.android.libraries.car.app.samples.navigation.nav.DeepLinkNotificationReceiver;
 import com.google.android.libraries.car.app.samples.navigation.nav.NavigationService;
 import java.util.List;
 
@@ -51,12 +53,19 @@ public final class NavigationCarAppService extends CarAppService
     implements NavigationScreen.Listener {
   private static final String TAG = NavigationCarAppService.class.getSimpleName();
 
+  private static final String URI_SCHEME = "samples";
+  private static final String URI_HOST = "navigation";
+
   @Nullable private SurfaceRenderer mNavigationCarSurface;
 
   // A reference to the navigation service used to get location updates and routing.
   @Nullable private NavigationService mService;
 
   @Nullable private NavigationScreen mNavigationScreen;
+
+  public static Uri createDeepLinkUri(String deepLinkAction) {
+    return Uri.fromParts(URI_SCHEME, URI_HOST, deepLinkAction);
+  }
 
   private final NavigationService.Listener mServiceListener =
       new NavigationService.Listener() {
@@ -176,10 +185,31 @@ public final class NavigationCarAppService extends CarAppService
   @Override
   public void onNewIntent(@NonNull Intent intent) {
     Log.i(TAG, "In onNewIntent() " + intent);
+    ScreenManager screenManager = getCarContext().getCarService(ScreenManager.class);
     if (CarContext.ACTION_NAVIGATE.equals(intent.getAction())) {
       CarToast.makeText(
               getCarContext(), "Navigation intent: " + intent.getDataString(), CarToast.LENGTH_LONG)
           .show();
+      return;
+    }
+
+    // Process the intent from DeepLinkNotificationReceiver. Bring the routing screen back to the
+    // top if any other screens were pushed onto it.
+    Uri uri = intent.getData();
+    if (uri != null
+        && URI_SCHEME.equals(uri.getScheme())
+        && URI_HOST.equals(uri.getSchemeSpecificPart())) {
+
+      Screen top = screenManager.getTop();
+      switch (uri.getFragment()) {
+        case DeepLinkNotificationReceiver.INTENT_ACTION_NAV_NOTIFICATION_OPEN_APP:
+          if (!(top instanceof NavigationScreen)) {
+            screenManager.popTo(Screen.ROOT);
+          }
+          break;
+        default:
+          // No-op
+      }
     }
   }
 
