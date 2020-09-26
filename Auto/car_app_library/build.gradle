@@ -38,9 +38,6 @@ allprojects {
         google()
         jcenter()
         mavenCentral()
-
-        // Offline maven repo containing the car app library AAR
-        maven { url("${project.rootDir}/m2repo") }
     }
 }
 

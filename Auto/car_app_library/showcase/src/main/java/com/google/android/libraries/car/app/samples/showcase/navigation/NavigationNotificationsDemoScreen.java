@@ -56,15 +56,6 @@ public final class NavigationNotificationsDemoScreen extends Screen {
                   } else {
                     context.startService(intent);
                   }
-
-                  // Notifications from navigation apps are only shown while the app is not in the
-                  // foreground. If you launch a different app, or press "home" on the Android Auto
-                  // rail to go to the launcher, the notifications will start being displayed.
-                  CarToast.makeText(
-                          getCarContext(),
-                          "To see the notifications, launch a different app.",
-                          LENGTH_LONG)
-                      .show();
                 })
             .build());
 
