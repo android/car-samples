@@ -17,6 +17,7 @@
 package com.google.android.libraries.car.app.samples.navigation.car;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import com.google.android.libraries.car.app.CarContext;
 import com.google.android.libraries.car.app.Screen;
 import com.google.android.libraries.car.app.SearchListener;
@@ -25,15 +26,24 @@ import com.google.android.libraries.car.app.model.ItemList;
 import com.google.android.libraries.car.app.model.Row;
 import com.google.android.libraries.car.app.model.SearchTemplate;
 import com.google.android.libraries.car.app.model.Template;
+import com.google.android.libraries.car.app.samples.navigation.model.DemoScripts;
 
 /** Screen for showing entering a search and showing initial results. */
 public final class SearchScreen extends Screen {
 
+  @NonNull private final Action mSettingsAction;
+  @NonNull private final SurfaceRenderer mSurfaceRenderer;
+
   private boolean isSearchComplete;
   private ItemList mItemList = withNoResults(ItemList.builder()).build();
 
-  public SearchScreen(@NonNull CarContext carContext) {
+  public SearchScreen(
+      @NonNull CarContext carContext,
+      @NonNull Action settingsAction,
+      SurfaceRenderer surfaceRenderer) {
     super(carContext);
+    mSettingsAction = settingsAction;
+    mSurfaceRenderer = surfaceRenderer;
   }
 
   @NonNull
@@ -61,26 +71,18 @@ public final class SearchScreen extends Screen {
   private void doSearch(String searchText) {
     ItemList.Builder builder = ItemList.builder();
     if (searchText.isEmpty()) {
-      mItemList = withNoResults(builder).build();
+      withNoResults(builder);
     } else if ("home".startsWith(searchText.toLowerCase())) {
       builder.addItem(
-          Row.builder()
-              .setTitle("Home")
-              .setOnClickListener(
-                  () -> {
-                    setResult("Home");
-                    finish();
-                  })
-              .build());
+          Row.builder().setTitle("Home").setOnClickListener(() -> onClickItem("Home")).build());
     } else if ("work".startsWith(searchText.toLowerCase())) {
       builder.addItem(
+          Row.builder().setTitle("Work").setOnClickListener(() -> onClickItem("Work")).build());
+    } else {
+      builder.addItem(
           Row.builder()
-              .setTitle("Work")
-              .setOnClickListener(
-                  () -> {
-                    setResult("Work");
-                    finish();
-                  })
+              .setTitle("Search: " + searchText)
+              .setOnClickListener(() -> onClickSearch(searchText))
               .build());
     }
     mItemList = builder.build();
@@ -90,5 +92,34 @@ public final class SearchScreen extends Screen {
 
   private static ItemList.Builder withNoResults(ItemList.Builder builder) {
     return builder.setNoItemsMessage("No Results");
+  }
+
+  private void onClickItem(@NonNull String favorite) {
+    getScreenManager()
+        .pushForResult(
+            new RoutePreviewScreen(getCarContext(), mSettingsAction, mSurfaceRenderer),
+            this::onRouteSelected);
+  }
+
+  private void onRouteSelected(@Nullable Object previewResult) {
+    int previewIndex = previewResult == null ? -1 : (int) previewResult;
+    if (previewIndex < 0) {
+      return;
+    }
+    // Start the same demo instructions. More will be added in the future.
+    setResult(DemoScripts.getNavigateHome(getCarContext()));
+    finish();
+  }
+
+  private void onClickSearch(@NonNull String searchText) {
+    getScreenManager()
+        .pushForResult(
+            new SearchResultsScreen(getCarContext(), mSettingsAction, mSurfaceRenderer, searchText),
+            this::onRoutePreviewResult);
+  }
+
+  private void onRoutePreviewResult(@Nullable Object instructions) {
+    setResult(instructions);
+    finish();
   }
 }

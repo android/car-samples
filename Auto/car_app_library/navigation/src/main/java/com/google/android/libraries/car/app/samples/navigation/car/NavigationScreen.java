@@ -23,7 +23,6 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.graphics.drawable.IconCompat;
 import com.google.android.libraries.car.app.CarContext;
-import com.google.android.libraries.car.app.CarToast;
 import com.google.android.libraries.car.app.Screen;
 import com.google.android.libraries.car.app.model.Action;
 import com.google.android.libraries.car.app.model.ActionStrip;
@@ -232,12 +231,16 @@ public final class NavigationScreen extends Screen {
   private void openSearch() {
     getScreenManager()
         .pushForResult(
-            new SearchScreen(getCarContext()),
-            (result) -> {
-              if (result != null) {
-                CarToast.makeText(
-                        getCarContext(), "Search Result:" + (String) result, CarToast.LENGTH_LONG)
-                    .show();
+            new SearchScreen(getCarContext(), mSettingsAction, mSurfaceRenderer),
+            (obj) -> {
+              if (obj != null) {
+                // Need to copy over each element to satisfy Java type safety.
+                List<?> results = (List<?>) obj;
+                List<Instruction> instructions = new ArrayList<Instruction>();
+                for (Object result : results) {
+                  instructions.add((Instruction) result);
+                }
+                mListener.executeScript(instructions);
               }
             });
   }

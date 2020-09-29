@@ -46,6 +46,7 @@ import com.google.android.libraries.car.app.samples.navigation.R;
 import com.google.android.libraries.car.app.samples.navigation.model.Instruction;
 import com.google.android.libraries.car.app.samples.navigation.nav.DeepLinkNotificationReceiver;
 import com.google.android.libraries.car.app.samples.navigation.nav.NavigationService;
+import java.util.ArrayList;
 import java.util.List;
 
 /** Entry point for the templated app. */
@@ -62,6 +63,7 @@ public final class NavigationCarAppService extends CarAppService
   @Nullable private NavigationService mService;
 
   @Nullable private NavigationScreen mNavigationScreen;
+  @NonNull private Action mSettingsAction;
 
   public static Uri createDeepLinkUri(String deepLinkAction) {
     return Uri.fromParts(URI_SCHEME, URI_HOST, deepLinkAction);
@@ -159,7 +161,7 @@ public final class NavigationCarAppService extends CarAppService
   public Screen onCreateScreen(@Nullable Intent intent) {
     Log.i(TAG, "In onCreateScreen()");
 
-    Action settingsAction =
+    mSettingsAction =
         Action.builder()
             .setIcon(
                 CarIcon.of(IconCompat.createWithResource(getCarContext(), R.drawable.ic_settings)))
@@ -173,7 +175,7 @@ public final class NavigationCarAppService extends CarAppService
 
     mNavigationCarSurface = new SurfaceRenderer(getCarContext(), getLifecycle());
     mNavigationScreen =
-        new NavigationScreen(getCarContext(), settingsAction, this, mNavigationCarSurface);
+        new NavigationScreen(getCarContext(), mSettingsAction, this, mNavigationCarSurface);
 
     if (CarContext.ACTION_NAVIGATE.equals(intent.getAction())) {
       CarToast.makeText(
@@ -188,9 +190,23 @@ public final class NavigationCarAppService extends CarAppService
     Log.i(TAG, "In onNewIntent() " + intent);
     ScreenManager screenManager = getCarContext().getCarService(ScreenManager.class);
     if (CarContext.ACTION_NAVIGATE.equals(intent.getAction())) {
-      CarToast.makeText(
-              getCarContext(), "Navigation intent: " + intent.getDataString(), CarToast.LENGTH_LONG)
-          .show();
+      Uri uri = Uri.parse("http:///" + intent.getDataString());
+      screenManager.popTo(Screen.ROOT);
+      screenManager.pushForResult(
+          new SearchResultsScreen(
+              getCarContext(), mSettingsAction, mNavigationCarSurface, uri.getQueryParameter("q")),
+          (obj) -> {
+            if (obj != null) {
+              // Need to copy over each element to satisfy Java type safety.
+              List<?> results = (List<?>) obj;
+              List<Instruction> instructions = new ArrayList<Instruction>();
+              for (Object result : results) {
+                instructions.add((Instruction) result);
+              }
+              executeScript(instructions);
+            }
+          });
+
       return;
     }
 
