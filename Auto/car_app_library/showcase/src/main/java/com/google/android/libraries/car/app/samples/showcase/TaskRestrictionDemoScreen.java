@@ -27,9 +27,11 @@ import com.google.android.libraries.car.app.model.ActionStrip;
 import com.google.android.libraries.car.app.model.CarIcon;
 import com.google.android.libraries.car.app.model.ItemList;
 import com.google.android.libraries.car.app.model.ListTemplate;
+import com.google.android.libraries.car.app.model.MessageTemplate;
 import com.google.android.libraries.car.app.model.Row;
 import com.google.android.libraries.car.app.model.Template;
 import com.google.android.libraries.car.app.model.Toggle;
+import java.util.Arrays;
 
 /** Screen for demonstrating task flow limitations. */
 public final class TaskRestrictionDemoScreen extends Screen {
@@ -50,70 +52,68 @@ public final class TaskRestrictionDemoScreen extends Screen {
   @NonNull
   @Override
   public Template getTemplate() {
-    ItemList.Builder builder = ItemList.builder();
-
+    // Last step must either be a PaneTemplate, MessageTemplate or NavigationTemplate.
     if (step == MAX_STEPS_ALLOWED) {
-      builder
-          .addItem(
-              Row.builder()
-                  .setTitle("Task limit reached")
-                  .addText("Going forward will force stop the app")
-                  .build())
-          .addItem(
-              Row.builder()
-                  .setTitle("Try anyway")
-                  .setOnClickListener(
-                      () ->
-                          getScreenManager()
-                              .pushForResult(
-                                  new TaskRestrictionDemoScreen(step + 1, getCarContext()),
-                                  result -> isBackOperation = true))
-                  .build());
-    } else {
-      builder
-          .addItem(
-              Row.builder()
-                  .setTitle("Task step " + step + " of " + MAX_STEPS_ALLOWED)
-                  .addText("Click to go forward")
-                  .setOnClickListener(
-                      () ->
-                          getScreenManager()
-                              .pushForResult(
-                                  new TaskRestrictionDemoScreen(step + 1, getCarContext()),
-                                  result -> isBackOperation = true))
-                  .build())
-          .addItem(
-              Row.builder()
-                  .setTitle("Toggle test")
-                  .addText("Stateful changes are allowed")
-                  .setToggle(
-                      Toggle.builder(
-                              checked -> {
-                                toggleState = !toggleState;
-                                invalidate();
-                              })
-                          .setChecked(toggleState)
-                          .build())
-                  .build())
-          .addItem(
-              Row.builder()
-                  .setTitle("Image test")
-                  .addText("Image changes are allowed")
-                  .setImage(
-                      CarIcon.of(
-                          IconCompat.createWithResource(
-                              getCarContext(), R.drawable.ic_fastfood_white_48dp)),
-                      imageSize)
-                  .setOnClickListener(
-                      () -> {
-                        imageSize =
-                            imageSize == Row.IMAGE_TYPE_SMALL
-                                ? Row.IMAGE_TYPE_LARGE
-                                : Row.IMAGE_TYPE_SMALL;
-                        invalidate();
-                      })
-                  .build());
+      return MessageTemplate.builder("Task limit reached\nGoing forward will force stop the app")
+          .setHeaderAction(BACK)
+          .setActions(
+              Arrays.asList(
+                  Action.builder()
+                      .setTitle("Try Anyway")
+                      .setOnClickListener(
+                          () ->
+                              getScreenManager()
+                                  .pushForResult(
+                                      new TaskRestrictionDemoScreen(step + 1, getCarContext()),
+                                      result -> isBackOperation = true))
+                      .build()))
+          .build();
     }
+
+    ItemList.Builder builder = ItemList.builder();
+    builder
+        .addItem(
+            Row.builder()
+                .setTitle("Task step " + step + " of " + MAX_STEPS_ALLOWED)
+                .addText("Click to go forward")
+                .setOnClickListener(
+                    () ->
+                        getScreenManager()
+                            .pushForResult(
+                                new TaskRestrictionDemoScreen(step + 1, getCarContext()),
+                                result -> isBackOperation = true))
+                .build())
+        .addItem(
+            Row.builder()
+                .setTitle("Toggle test")
+                .addText("Stateful changes are allowed")
+                .setToggle(
+                    Toggle.builder(
+                            checked -> {
+                              toggleState = !toggleState;
+                              invalidate();
+                            })
+                        .setChecked(toggleState)
+                        .build())
+                .build())
+        .addItem(
+            Row.builder()
+                .setTitle("Image test")
+                .addText("Image changes are allowed")
+                .setImage(
+                    CarIcon.of(
+                        IconCompat.createWithResource(
+                            getCarContext(), R.drawable.ic_fastfood_white_48dp)),
+                    imageSize)
+                .setOnClickListener(
+                    () -> {
+                      imageSize =
+                          imageSize == Row.IMAGE_TYPE_SMALL
+                              ? Row.IMAGE_TYPE_LARGE
+                              : Row.IMAGE_TYPE_SMALL;
+                      invalidate();
+                    })
+                .build());
 
     if (isBackOperation) {
       builder.addItem(
