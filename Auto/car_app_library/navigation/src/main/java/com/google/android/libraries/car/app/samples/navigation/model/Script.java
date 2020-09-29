@@ -44,7 +44,8 @@ public class Script {
     mInstructions = instructions;
     mRunnable = runnable;
     mCurrentInstruction = 0;
-    mHandler.post(this::nextInstruction);
+    // Execute the first instruction right away to start navigation and avoid flicker.
+    nextInstruction();
   }
 
   private void nextInstruction() {
