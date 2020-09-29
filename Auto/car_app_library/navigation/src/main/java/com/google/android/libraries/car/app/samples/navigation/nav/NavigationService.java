@@ -43,6 +43,7 @@ import androidx.core.app.NotificationCompat;
 import androidx.core.app.NotificationManagerCompat;
 import com.google.android.libraries.car.app.CarContext;
 import com.google.android.libraries.car.app.CarToast;
+import com.google.android.libraries.car.app.model.CarIcon;
 import com.google.android.libraries.car.app.model.Distance;
 import com.google.android.libraries.car.app.navigation.NavigationManager;
 import com.google.android.libraries.car.app.navigation.NavigationManagerListener;
@@ -98,7 +99,10 @@ public class NavigationService extends Service {
         List<Destination> destinations,
         List<Step> steps,
         TravelEstimate nextDestinationTravelEstimate,
-        Distance nextStepRemainingDistance);
+        Distance nextStepRemainingDistance,
+        boolean shouldShowNextStep,
+        boolean shouldShowLanes,
+        @Nullable CarIcon junctionImage);
   }
 
   /**
@@ -234,7 +238,10 @@ public class NavigationService extends Service {
                         instruction.getStepRemainingDistance(),
                         instruction.getShouldNotify(),
                         instruction.getNotificationString(),
-                        instruction.getNotificationIcon());
+                        instruction.getNotificationIcon(),
+                        instruction.getShouldShowNextStep(),
+                        instruction.getShouldShowLanes(),
+                        instruction.getJunctionImage());
                   }
                   break;
                 case SET_REROUTING:
@@ -259,7 +266,10 @@ public class NavigationService extends Service {
                         null,
                         instruction.getShouldNotify(),
                         instruction.getNotificationString(),
-                        instruction.getNotificationIcon());
+                        instruction.getNotificationIcon(),
+                        instruction.getShouldShowNextStep(),
+                        instruction.getShouldShowLanes(),
+                        instruction.getJunctionImage());
                   }
                   break;
                 case SET_ARRIVED:
@@ -274,7 +284,10 @@ public class NavigationService extends Service {
                         null,
                         instruction.getShouldNotify(),
                         instruction.getNotificationString(),
-                        instruction.getNotificationIcon());
+                        instruction.getNotificationIcon(),
+                        instruction.getShouldShowNextStep(),
+                        instruction.getShouldShowLanes(),
+                        instruction.getJunctionImage());
                   }
                   break;
               }
@@ -291,7 +304,10 @@ public class NavigationService extends Service {
       Distance nextStepRemainingDistance,
       boolean shouldNotify,
       @Nullable String notificationString,
-      int notificationIcon) {
+      int notificationIcon,
+      boolean shouldShowNextStep,
+      boolean shouldShowLanes,
+      @Nullable CarIcon junctionImage) {
     if (mListener != null) {
       mListener.navigationStateChanged(
           isNavigating,
@@ -300,7 +316,10 @@ public class NavigationService extends Service {
           destinations,
           steps,
           nextDestinationTravelEstimate,
-          nextStepRemainingDistance);
+          nextStepRemainingDistance,
+          shouldShowNextStep,
+          shouldShowLanes,
+          junctionImage);
     }
 
     if (mNotificationManager != null && !TextUtils.isEmpty(notificationString)) {
@@ -334,7 +353,10 @@ public class NavigationService extends Service {
           /* destinations= */ null,
           /* steps= */ null,
           /* nextDestinationTravelEstimate= */ null,
-          /* nextStepRemainingDistance= */ null);
+          /* nextStepRemainingDistance= */ null,
+          /* shouldShowNextStep= */ false,
+          /* shouldShowLanes= */ false,
+          /* junctionImage= */ null);
     }
   }
 
@@ -357,7 +379,10 @@ public class NavigationService extends Service {
           /* destinations= */ null,
           /* steps= */ null,
           /* nextDestinationTravelEstimate= */ null,
-          /* nextStepRemainingDistance= */ null);
+          /* nextStepRemainingDistance= */ null,
+          /* shouldShowNextStep= */ false,
+          /* shouldShowLanes= */ false,
+          /* junctionImage= */ null);
     }
     stopForeground(true);
     stopSelf();

@@ -79,7 +79,10 @@ public final class NavigationCarAppService extends CarAppService
             @Nullable List<Destination> destinations,
             @Nullable List<Step> steps,
             @Nullable TravelEstimate nextDestinationTravelEstimate,
-            @Nullable Distance nextStepRemainingDistance) {
+            @Nullable Distance nextStepRemainingDistance,
+            boolean shouldShowNextStep,
+            boolean shouldShowLanes,
+            @Nullable CarIcon junctionImage) {
           mNavigationScreen.updateTrip(
               isNavigating,
               isRerouting,
@@ -87,7 +90,10 @@ public final class NavigationCarAppService extends CarAppService
               destinations,
               steps,
               nextDestinationTravelEstimate,
-              nextStepRemainingDistance);
+              nextStepRemainingDistance,
+              shouldShowNextStep,
+              shouldShowLanes,
+              junctionImage);
         }
       };
 

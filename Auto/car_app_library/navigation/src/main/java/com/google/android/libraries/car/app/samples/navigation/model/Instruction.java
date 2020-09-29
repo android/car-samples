@@ -17,6 +17,7 @@
 package com.google.android.libraries.car.app.samples.navigation.model;
 
 import androidx.annotation.Nullable;
+import com.google.android.libraries.car.app.model.CarIcon;
 import com.google.android.libraries.car.app.model.Distance;
 import com.google.android.libraries.car.app.navigation.model.Destination;
 import com.google.android.libraries.car.app.navigation.model.Step;
@@ -70,6 +71,10 @@ public class Instruction {
   @Nullable private final TravelEstimate mStepTravelEstimate;
   @Nullable private final TravelEstimate mDestinationTravelEstimate;
   @Nullable private final String mRoad;
+  private final boolean mShouldShowNextStep;
+  private final boolean mShouldShowLanes;
+  @Nullable private final CarIcon mJunctionImage;
+
   @Nullable private final String mNotificationString;
   private final int mNotificationIcon;
   private final boolean mShouldNotify;
@@ -117,6 +122,19 @@ public class Instruction {
     return mRoad;
   }
 
+  public boolean getShouldShowNextStep() {
+    return mShouldShowNextStep;
+  }
+
+  public boolean getShouldShowLanes() {
+    return mShouldShowLanes;
+  }
+
+  @Nullable
+  public CarIcon getJunctionImage() {
+    return mJunctionImage;
+  }
+
   @Nullable
   public String getNotificationString() {
     return mNotificationString;
@@ -139,6 +157,9 @@ public class Instruction {
     mStepTravelEstimate = builder.mStepTravelEstimate;
     mDestinationTravelEstimate = builder.mDestinationTravelEstimate;
     mRoad = builder.mRoad;
+    mShouldShowNextStep = builder.mShouldShowNextStep;
+    mShouldShowLanes = builder.mShouldShowLanes;
+    mJunctionImage = builder.mJunctionImage;
     mNotificationString = builder.mNotificationString;
     mNotificationIcon = builder.mNotificationIcon;
     mShouldNotify = builder.mShouldNotify;
@@ -154,6 +175,10 @@ public class Instruction {
     @Nullable private TravelEstimate mStepTravelEstimate;
     @Nullable private TravelEstimate mDestinationTravelEstimate;
     @Nullable private String mRoad;
+    private boolean mShouldShowNextStep;
+    private boolean mShouldShowLanes;
+    @Nullable private CarIcon mJunctionImage;
+
     @Nullable private String mNotificationString;
     @Nullable private int mNotificationIcon;
     private boolean mShouldNotify;
@@ -190,6 +215,21 @@ public class Instruction {
 
     Builder setRoad(@Nullable String road) {
       mRoad = road;
+      return this;
+    }
+
+    Builder setShouldShowNextStep(boolean shouldShowNextStep) {
+      mShouldShowNextStep = shouldShowNextStep;
+      return this;
+    }
+
+    Builder setShouldShowLanes(boolean shouldShowLanes) {
+      mShouldShowLanes = shouldShowLanes;
+      return this;
+    }
+
+    Builder setJunctionImage(@Nullable CarIcon junctionImage) {
+      mJunctionImage = junctionImage;
       return this;
     }
 

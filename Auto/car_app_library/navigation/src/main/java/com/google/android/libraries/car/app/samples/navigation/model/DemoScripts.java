@@ -16,6 +16,8 @@
 
 package com.google.android.libraries.car.app.samples.navigation.model;
 
+import static com.google.android.libraries.car.app.navigation.model.LaneDirection.SHAPE_NORMAL_RIGHT;
+import static com.google.android.libraries.car.app.navigation.model.LaneDirection.SHAPE_STRAIGHT;
 import static com.google.android.libraries.car.app.navigation.model.Maneuver.TYPE_DEPART;
 import static com.google.android.libraries.car.app.navigation.model.Maneuver.TYPE_DESTINATION;
 import static com.google.android.libraries.car.app.navigation.model.Maneuver.TYPE_DESTINATION_LEFT;
@@ -61,12 +63,15 @@ import static com.google.android.libraries.car.app.navigation.model.Maneuver.TYP
 import static com.google.android.libraries.car.app.navigation.model.Maneuver.TYPE_U_TURN_RIGHT;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 
+import androidx.annotation.Nullable;
 import androidx.core.graphics.drawable.IconCompat;
 import com.google.android.libraries.car.app.CarContext;
 import com.google.android.libraries.car.app.model.CarIcon;
 import com.google.android.libraries.car.app.model.DateTimeWithZone;
 import com.google.android.libraries.car.app.model.Distance;
 import com.google.android.libraries.car.app.navigation.model.Destination;
+import com.google.android.libraries.car.app.navigation.model.Lane;
+import com.google.android.libraries.car.app.navigation.model.LaneDirection;
 import com.google.android.libraries.car.app.navigation.model.Maneuver;
 import com.google.android.libraries.car.app.navigation.model.Step;
 import com.google.android.libraries.car.app.navigation.model.TravelEstimate;
@@ -124,6 +129,18 @@ public class DemoScripts {
 
     DateTimeWithZone arrivalTimeAtDestination = getCurrentDateTimeZoneWithOffset(30);
 
+    CarIcon lanesImage = CarIcon.of(IconCompat.createWithResource(carContext, R.drawable.lanes));
+    CarIcon junctionImage =
+        CarIcon.of(
+            IconCompat.createWithResource(
+                carContext,
+                com.google.android.libraries.car.app.samples.navigation.R.drawable.junction_image));
+
+    Lane straightNormal =
+        Lane.builder().addDirection(LaneDirection.create(SHAPE_STRAIGHT, false)).build();
+    Lane rightHighlighted =
+        Lane.builder().addDirection(LaneDirection.create(SHAPE_NORMAL_RIGHT, true)).build();
+
     int step1IconResourceId =
         getTurnIconResourceId(Maneuver.TYPE_ROUNDABOUT_ENTER_AND_EXIT_CCW_WITH_ANGLE);
     Step step1 =
@@ -136,6 +153,12 @@ public class DemoScripts {
                     2,
                     270))
             .setRoad("State Street")
+            .addLane(straightNormal)
+            .addLane(straightNormal)
+            .addLane(straightNormal)
+            .addLane(straightNormal)
+            .addLane(rightHighlighted)
+            .setLanesImage(lanesImage)
             .build();
     int step2IconResourceId = getTurnIconResourceId(Maneuver.TYPE_TURN_NORMAL_LEFT);
     Step step2 =
@@ -143,6 +166,12 @@ public class DemoScripts {
             .setManeuver(
                 getManeuver(carContext, Maneuver.TYPE_TURN_NORMAL_LEFT, step2IconResourceId))
             .setRoad("Kirkland Way")
+            .addLane(straightNormal)
+            .addLane(straightNormal)
+            .addLane(straightNormal)
+            .addLane(straightNormal)
+            .addLane(rightHighlighted)
+            .setLanesImage(lanesImage)
             .build();
     int step3IconResourceId = getTurnIconResourceId(Maneuver.TYPE_TURN_NORMAL_RIGHT);
     Step step3 =
@@ -150,6 +179,12 @@ public class DemoScripts {
             .setManeuver(
                 getManeuver(carContext, Maneuver.TYPE_TURN_NORMAL_RIGHT, step3IconResourceId))
             .setRoad("6th Street.")
+            .addLane(straightNormal)
+            .addLane(straightNormal)
+            .addLane(straightNormal)
+            .addLane(straightNormal)
+            .addLane(rightHighlighted)
+            .setLanesImage(lanesImage)
             .build();
     int step4IconResourceId = getTurnIconResourceId(Maneuver.TYPE_DESTINATION_RIGHT);
     Step step4 =
@@ -206,6 +241,7 @@ public class DemoScripts {
             /* startStepDistanceRemaining= */ 100,
             arrivalTimeAtDestination,
             "3rd Street",
+            junctionImage,
             "onto State Street",
             SPEED_METERS_PER_SEC,
             step1IconResourceId));
@@ -221,6 +257,7 @@ public class DemoScripts {
             /* startStepDistanceRemaining= */ 150,
             arrivalTimeAtDestination,
             "State Street",
+            junctionImage,
             "onto Kirkland Way",
             SPEED_METERS_PER_SEC,
             step2IconResourceId));
@@ -236,6 +273,7 @@ public class DemoScripts {
             /* startStepDistanceRemaining= */ 100,
             arrivalTimeAtDestination,
             "Kirkland Way",
+            junctionImage,
             "onto 6th Street",
             SPEED_METERS_PER_SEC,
             step3IconResourceId));
@@ -251,6 +289,7 @@ public class DemoScripts {
             /* startStepDistanceRemaining= */ 100,
             arrivalTimeAtDestination,
             "6th Street",
+            junctionImage,
             "to Google Kirkland on right",
             SPEED_METERS_PER_SEC,
             step4IconResourceId));
@@ -295,6 +334,7 @@ public class DemoScripts {
    * @param startStepDistanceRemaining the distance until the next step at the start of the sequence
    * @param arrivalTimeAtDestination the arrival time at the destination
    * @param currentRoad the name of the road currently being travelled
+   * @param junctionImage photo realistic image of upcoming turn
    * @param speed meters/second being traveled
    * @return sequence of instructions until the next step
    */
@@ -304,6 +344,7 @@ public class DemoScripts {
       int startStepDistanceRemaining,
       DateTimeWithZone arrivalTimeAtDestination,
       String currentRoad,
+      @Nullable CarIcon junctionImage,
       String nextInstruction,
       int speed,
       int notificationIcon) {
@@ -326,7 +367,7 @@ public class DemoScripts {
               /* timeToStep= */ distanceIncrement,
               getCurrentDateTimeZoneWithOffset(distanceIncrement));
       String notificationString = String.format("%dm %s", stepDistanceRemaining, nextInstruction);
-      sequence.add(
+      Instruction.Builder instruction =
           Instruction.builder(
                   Instruction.Type.SET_TRIP_POSITION_NAVIGATION,
                   TimeUnit.SECONDS.toMillis(distanceIncrement / speed))
@@ -334,8 +375,20 @@ public class DemoScripts {
               .setStepTravelEstimate(stepTravelEstimate)
               .setDestinationTravelEstimate(destinationTravelEstimate)
               .setRoad(currentRoad)
-              .setNotification(notify, notificationString, notificationIcon)
-              .build());
+              .setNotification(notify, notificationString, notificationIcon);
+      if (i == 0) {
+        instruction.setShouldShowLanes(false).setShouldShowNextStep(true);
+      } else if (i == 1) {
+        instruction.setShouldShowLanes(true).setShouldShowNextStep(true);
+      } else if (i == 2) {
+        instruction.setShouldShowLanes(true).setShouldShowNextStep(false);
+      } else {
+        instruction
+            .setShouldShowLanes(false)
+            .setShouldShowNextStep(false)
+            .setJunctionImage(junctionImage);
+      }
+      sequence.add(instruction.build());
 
       destinationDistanceRemaining -= distanceIncrement;
       stepDistanceRemaining -= distanceIncrement;

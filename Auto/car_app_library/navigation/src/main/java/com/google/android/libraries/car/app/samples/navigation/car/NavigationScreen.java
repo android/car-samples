@@ -16,8 +16,6 @@
 
 package com.google.android.libraries.car.app.samples.navigation.car;
 
-import static com.google.android.libraries.car.app.navigation.model.LaneDirection.SHAPE_NORMAL_RIGHT;
-import static com.google.android.libraries.car.app.navigation.model.LaneDirection.SHAPE_STRAIGHT;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -31,8 +29,6 @@ import com.google.android.libraries.car.app.model.CarIcon;
 import com.google.android.libraries.car.app.model.Distance;
 import com.google.android.libraries.car.app.model.Template;
 import com.google.android.libraries.car.app.navigation.model.Destination;
-import com.google.android.libraries.car.app.navigation.model.Lane;
-import com.google.android.libraries.car.app.navigation.model.LaneDirection;
 import com.google.android.libraries.car.app.navigation.model.MessageInfo;
 import com.google.android.libraries.car.app.navigation.model.NavigationTemplate;
 import com.google.android.libraries.car.app.navigation.model.RoutingInfo;
@@ -63,8 +59,9 @@ public final class NavigationScreen extends Screen {
   @Nullable private List<Step> mSteps;
   @Nullable private Distance mStepRemainingDistance;
   @Nullable private TravelEstimate mDestinationTravelEstimate;
-
-  private int state;
+  private boolean mShouldShowNextStep;
+  private boolean mShouldShowLanes;
+  @Nullable CarIcon mJunctionImage;
 
   public NavigationScreen(
       @NonNull CarContext carContext,
@@ -84,7 +81,10 @@ public final class NavigationScreen extends Screen {
       @Nullable List<Destination> destinations,
       @Nullable List<Step> steps,
       @Nullable TravelEstimate nextDestinationTravelEstimate,
-      @Nullable Distance nextStepRemainingDistance) {
+      @Nullable Distance nextStepRemainingDistance,
+      boolean shouldShowNextStep,
+      boolean shouldShowLanes,
+      @Nullable CarIcon junctionImage) {
     mIsNavigating = isNavigating;
     mIsRerouting = isRerouting;
     mHasArrived = hasArrived;
@@ -92,6 +92,9 @@ public final class NavigationScreen extends Screen {
     mSteps = steps;
     mStepRemainingDistance = nextStepRemainingDistance;
     mDestinationTravelEstimate = nextDestinationTravelEstimate;
+    mShouldShowNextStep = shouldShowNextStep;
+    mShouldShowLanes = shouldShowLanes;
+    mJunctionImage = junctionImage;
     invalidate();
   }
 
@@ -134,68 +137,15 @@ public final class NavigationScreen extends Screen {
         RoutingInfo.Builder info = RoutingInfo.builder();
         Step tmp = mSteps.get(0);
         Step.Builder currentStep = tmp.newBuilder();
-
-        // Use a different set of next turn info for each update, rotating between turn info only,
-        // turn info with lanes, lanes only, junction image, and no next turn info.
-        if (state == 0) {
-          if (mSteps.size() > 1) {
-            info.setNextStep(mSteps.get(1));
-          }
-          state++;
-        } else if (state == 1) {
-          CarIcon lanesImage =
-              CarIcon.of(IconCompat.createWithResource(getCarContext(), R.drawable.lanes));
-          currentStep.setLanesImage(lanesImage);
-          Lane straightNormal =
-              Lane.builder().addDirection(LaneDirection.create(SHAPE_STRAIGHT, false)).build();
-          Lane rightHighlighted =
-              Lane.builder().addDirection(LaneDirection.create(SHAPE_NORMAL_RIGHT, true)).build();
-          currentStep
-              .addLane(straightNormal)
-              .addLane(straightNormal)
-              .addLane(straightNormal)
-              .addLane(straightNormal)
-              .addLane(rightHighlighted);
-          if (mSteps.size() > 1) {
-            info.setNextStep(mSteps.get(1));
-          }
-          state++;
-        } else if (state == 2) {
-          CarIcon lanesImage =
-              CarIcon.of(IconCompat.createWithResource(getCarContext(), R.drawable.lanes));
-          currentStep.setLanesImage(lanesImage);
-          Lane straightNormal =
-              Lane.builder().addDirection(LaneDirection.create(SHAPE_STRAIGHT, false)).build();
-          Lane rightHighlighted =
-              Lane.builder().addDirection(LaneDirection.create(SHAPE_NORMAL_RIGHT, true)).build();
-          currentStep
-              .addLane(straightNormal)
-              .addLane(straightNormal)
-              .addLane(straightNormal)
-              .addLane(straightNormal)
-              .addLane(rightHighlighted);
-          state++;
-        } else if (state == 3) {
-          info.setJunctionImage(
-              CarIcon.of(
-                  IconCompat.createWithResource(
-                      getCarContext(),
-                      com.google
-                          .android
-                          .libraries
-                          .car
-                          .app
-                          .samples
-                          .navigation
-                          .R
-                          .drawable
-                          .junction_image)));
-          state++;
-        } else {
-          state = 0;
+        if (!mShouldShowLanes) {
+          currentStep.clearLanes();
+          currentStep.setLanesImage(null);
         }
-
         info.setCurrentStep(currentStep.build(), mStepRemainingDistance);
+        if (mShouldShowNextStep && mSteps.size() > 1) {
+          info.setNextStep(mSteps.get(1));
+        }
+        info.setJunctionImage(mJunctionImage);
         builder.setNavigationInfo(info.build());
       }
     }
