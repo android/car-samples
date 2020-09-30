@@ -242,6 +242,7 @@ public class DemoScripts {
             arrivalTimeAtDestination,
             "3rd Street",
             junctionImage,
+            /* showLanes= */ true,
             "onto State Street",
             SPEED_METERS_PER_SEC,
             step1IconResourceId));
@@ -258,6 +259,7 @@ public class DemoScripts {
             arrivalTimeAtDestination,
             "State Street",
             junctionImage,
+            /* showLanes= */ true,
             "onto Kirkland Way",
             SPEED_METERS_PER_SEC,
             step2IconResourceId));
@@ -274,6 +276,7 @@ public class DemoScripts {
             arrivalTimeAtDestination,
             "Kirkland Way",
             junctionImage,
+            /* showLanes= */ true,
             "onto 6th Street",
             SPEED_METERS_PER_SEC,
             step3IconResourceId));
@@ -289,7 +292,8 @@ public class DemoScripts {
             /* startStepDistanceRemaining= */ 100,
             arrivalTimeAtDestination,
             "6th Street",
-            junctionImage,
+            /* jungtionImage= */ null,
+            /* showLanes= */ false,
             "to Google Kirkland on right",
             SPEED_METERS_PER_SEC,
             step4IconResourceId));
@@ -335,6 +339,7 @@ public class DemoScripts {
    * @param arrivalTimeAtDestination the arrival time at the destination
    * @param currentRoad the name of the road currently being travelled
    * @param junctionImage photo realistic image of upcoming turn
+   * @param showLanes indicates if the lane info should be shown for this maneuver
    * @param speed meters/second being traveled
    * @return sequence of instructions until the next step
    */
@@ -345,6 +350,7 @@ public class DemoScripts {
       DateTimeWithZone arrivalTimeAtDestination,
       String currentRoad,
       @Nullable CarIcon junctionImage,
+      boolean showLanes,
       String nextInstruction,
       int speed,
       int notificationIcon) {
@@ -376,12 +382,14 @@ public class DemoScripts {
               .setDestinationTravelEstimate(destinationTravelEstimate)
               .setRoad(currentRoad)
               .setNotification(notify, notificationString, notificationIcon);
+      // Don't show lanes in the first and last part of the maneuver. In the middle part of the
+      // maneuver use the passed parameter to determine if lanes should be shown.
       if (i == 0) {
         instruction.setShouldShowLanes(false).setShouldShowNextStep(true);
       } else if (i == 1) {
-        instruction.setShouldShowLanes(true).setShouldShowNextStep(true);
+        instruction.setShouldShowLanes(showLanes).setShouldShowNextStep(true);
       } else if (i == 2) {
-        instruction.setShouldShowLanes(true).setShouldShowNextStep(false);
+        instruction.setShouldShowLanes(showLanes).setShouldShowNextStep(false);
       } else {
         instruction
             .setShouldShowLanes(false)
