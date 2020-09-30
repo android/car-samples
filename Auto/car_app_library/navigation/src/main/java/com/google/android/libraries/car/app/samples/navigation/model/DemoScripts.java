@@ -66,6 +66,7 @@ import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import androidx.annotation.Nullable;
 import androidx.core.graphics.drawable.IconCompat;
 import com.google.android.libraries.car.app.CarContext;
+import com.google.android.libraries.car.app.model.CarColor;
 import com.google.android.libraries.car.app.model.CarIcon;
 import com.google.android.libraries.car.app.model.DateTimeWithZone;
 import com.google.android.libraries.car.app.model.Distance;
@@ -363,10 +364,13 @@ public class DemoScripts {
     for (int i = 0; i < count; i++) {
       Distance remainingDistance = Distance.create(stepDistanceRemaining, Distance.UNIT_METERS);
       TravelEstimate destinationTravelEstimate =
-          TravelEstimate.create(
-              Distance.create(destinationDistanceRemaining, Distance.UNIT_METERS),
-              /* remainingSeconds= */ destinationDistanceRemaining / speed,
-              arrivalTimeAtDestination);
+          TravelEstimate.builder(
+                  Distance.create(destinationDistanceRemaining, Distance.UNIT_METERS),
+                  /* remainingSeconds= */ destinationDistanceRemaining / speed,
+                  arrivalTimeAtDestination)
+              .setRemainingTimeColor(CarColor.YELLOW)
+              .setRemainingDistanceColor(CarColor.GREEN)
+              .build();
       TravelEstimate stepTravelEstimate =
           TravelEstimate.create(
               remainingDistance,
