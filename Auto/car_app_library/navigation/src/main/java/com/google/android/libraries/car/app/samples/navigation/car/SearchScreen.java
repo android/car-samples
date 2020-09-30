@@ -27,6 +27,9 @@ import com.google.android.libraries.car.app.model.Row;
 import com.google.android.libraries.car.app.model.SearchTemplate;
 import com.google.android.libraries.car.app.model.Template;
 import com.google.android.libraries.car.app.samples.navigation.model.DemoScripts;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 /** Screen for showing entering a search and showing initial results. */
 public final class SearchScreen extends Screen {
@@ -34,8 +37,11 @@ public final class SearchScreen extends Screen {
   @NonNull private final Action mSettingsAction;
   @NonNull private final SurfaceRenderer mSurfaceRenderer;
 
-  private boolean isSearchComplete;
   private ItemList mItemList = withNoResults(ItemList.builder()).build();
+  private final List<String> mTitles = new ArrayList<>();
+  @Nullable private String mSearchText;
+  private final List<String> mFakeTitles =
+      new ArrayList<>(Arrays.asList("Starbucks", "Shell", "Costco", "Aldi", "Safeway"));
 
   public SearchScreen(
       @NonNull CarContext carContext,
@@ -58,32 +64,33 @@ public final class SearchScreen extends Screen {
 
               @Override
               public void onSearchSubmitted(@NonNull String searchTerm) {
-                isSearchComplete = true;
-                doSearch(searchTerm);
+                // When the user presses the search key use the top item in the list as the
+                // result and simulate as if the user had pressed that.
+                if (mTitles.size() > 0) {
+                  onClickSearch(mTitles.get(0));
+                }
               }
             })
         .setHeaderAction(Action.BACK)
         .setShowKeyboardByDefault(false)
         .setItemList(mItemList)
+        .setInitialSearchText(mSearchText)
         .build();
   }
 
   private void doSearch(String searchText) {
+    mSearchText = searchText;
+    mTitles.clear();
     ItemList.Builder builder = ItemList.builder();
     if (searchText.isEmpty()) {
       withNoResults(builder);
-    } else if ("home".startsWith(searchText.toLowerCase())) {
-      builder.addItem(
-          Row.builder().setTitle("Home").setOnClickListener(() -> onClickItem("Home")).build());
-    } else if ("work".startsWith(searchText.toLowerCase())) {
-      builder.addItem(
-          Row.builder().setTitle("Work").setOnClickListener(() -> onClickItem("Work")).build());
     } else {
-      builder.addItem(
-          Row.builder()
-              .setTitle("Search: " + searchText)
-              .setOnClickListener(() -> onClickSearch(searchText))
-              .build());
+      // Create some fake data entries.
+      for (String title : mFakeTitles) {
+        mTitles.add(title);
+        builder.addItem(
+            Row.builder().setTitle(title).setOnClickListener(() -> onClickSearch(title)).build());
+      }
     }
     mItemList = builder.build();
     invalidate();
@@ -94,7 +101,7 @@ public final class SearchScreen extends Screen {
     return builder.setNoItemsMessage("No Results");
   }
 
-  private void onClickItem(@NonNull String favorite) {
+  private void onClickSearch(@NonNull String searchText) {
     getScreenManager()
         .pushForResult(
             new RoutePreviewScreen(getCarContext(), mSettingsAction, mSurfaceRenderer),
@@ -108,18 +115,6 @@ public final class SearchScreen extends Screen {
     }
     // Start the same demo instructions. More will be added in the future.
     setResult(DemoScripts.getNavigateHome(getCarContext()));
-    finish();
-  }
-
-  private void onClickSearch(@NonNull String searchText) {
-    getScreenManager()
-        .pushForResult(
-            new SearchResultsScreen(getCarContext(), mSettingsAction, mSurfaceRenderer, searchText),
-            this::onRoutePreviewResult);
-  }
-
-  private void onRoutePreviewResult(@Nullable Object instructions) {
-    setResult(instructions);
     finish();
   }
 }
