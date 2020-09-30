@@ -40,6 +40,12 @@ android {
             testProguardFiles getDefaultProguardFile('proguard-android.txt'), 'test_app_rules.pro'
         }
     }
+    
+    lintOptions {
+        // Currently "template" is not allowed by lint check in the uses tag.
+        // The change to allow this is submitted, but not yet available.
+        abortOnError false
+    }
 }
 
 dependencies {
@@ -47,7 +53,7 @@ dependencies {
     testImplementation "androidx.test:core:1.2.0"
     testImplementation "androidx.test:rules:1.2.0"
     testImplementation "com.google.truth:truth:1.0.1"
-    testImplementation "org.robolectric:robolectric:4.3.1"
+    testImplementation "org.robolectric:robolectric:4.4"
     testImplementation "com.google.android.libraries.car:car-app-testing:1.0.0-beta.1"
 
     androidTestImplementation "androidx.test:core:1.2.0"
