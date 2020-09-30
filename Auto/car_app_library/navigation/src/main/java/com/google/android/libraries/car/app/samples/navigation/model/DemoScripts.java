@@ -213,7 +213,7 @@ public class DemoScripts {
                     Distance.create(350, Distance.UNIT_METERS),
                     /* remainingSeconds= */ DISTANCE_METERS / SPEED_METERS_PER_SEC,
                     arrivalTimeAtDestination))
-            .setNotification(true, "Rerouting...", R.drawable.ic_launcher)
+            .setNotification(true, "Rerouting...", null, R.drawable.ic_launcher)
             .build());
 
     instructions.add(
@@ -376,7 +376,7 @@ public class DemoScripts {
               remainingDistance,
               /* timeToStep= */ distanceIncrement,
               getCurrentDateTimeZoneWithOffset(distanceIncrement));
-      String notificationString = String.format("%dm %s", stepDistanceRemaining, nextInstruction);
+      String notificationTitle = String.format("%dm", stepDistanceRemaining);
       Instruction.Builder instruction =
           Instruction.builder(
                   Instruction.Type.SET_TRIP_POSITION_NAVIGATION,
@@ -385,7 +385,7 @@ public class DemoScripts {
               .setStepTravelEstimate(stepTravelEstimate)
               .setDestinationTravelEstimate(destinationTravelEstimate)
               .setRoad(currentRoad)
-              .setNotification(notify, notificationString, notificationIcon);
+              .setNotification(notify, notificationTitle, nextInstruction, notificationIcon);
       // Don't show lanes in the first and last part of the maneuver. In the middle part of the
       // maneuver use the passed parameter to determine if lanes should be shown.
       if (i == 0) {
@@ -514,11 +514,11 @@ public class DemoScripts {
         break;
       case TYPE_ROUNDABOUT_ENTER_AND_EXIT_CW:
       case TYPE_ROUNDABOUT_ENTER_AND_EXIT_CW_WITH_ANGLE:
-        resourceId = R.drawable.ic_turn_slight_left;
+        resourceId = R.drawable.ic_roundabout_cw;
         break;
       case TYPE_ROUNDABOUT_ENTER_AND_EXIT_CCW:
       case TYPE_ROUNDABOUT_ENTER_AND_EXIT_CCW_WITH_ANGLE:
-        resourceId = R.drawable.ic_turn_slight_right;
+        resourceId = R.drawable.ic_roundabout_ccw;
         break;
       case TYPE_FERRY_BOAT:
       case TYPE_FERRY_TRAIN:

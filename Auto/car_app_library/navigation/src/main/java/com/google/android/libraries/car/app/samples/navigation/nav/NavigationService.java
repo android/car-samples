@@ -237,7 +237,8 @@ public class NavigationService extends Service {
                         destinationTravelEstimate,
                         instruction.getStepRemainingDistance(),
                         instruction.getShouldNotify(),
-                        instruction.getNotificationString(),
+                        instruction.getNotificationTitle(),
+                        instruction.getNotificationContent(),
                         instruction.getNotificationIcon(),
                         instruction.getShouldShowNextStep(),
                         instruction.getShouldShowLanes(),
@@ -265,7 +266,8 @@ public class NavigationService extends Service {
                         null,
                         null,
                         instruction.getShouldNotify(),
-                        instruction.getNotificationString(),
+                        instruction.getNotificationTitle(),
+                        instruction.getNotificationContent(),
                         instruction.getNotificationIcon(),
                         instruction.getShouldShowNextStep(),
                         instruction.getShouldShowLanes(),
@@ -283,7 +285,8 @@ public class NavigationService extends Service {
                         null,
                         null,
                         instruction.getShouldNotify(),
-                        instruction.getNotificationString(),
+                        instruction.getNotificationTitle(),
+                        instruction.getNotificationContent(),
                         instruction.getNotificationIcon(),
                         instruction.getShouldShowNextStep(),
                         instruction.getShouldShowLanes(),
@@ -303,7 +306,8 @@ public class NavigationService extends Service {
       TravelEstimate nextDestinationTravelEstimate,
       Distance nextStepRemainingDistance,
       boolean shouldNotify,
-      @Nullable String notificationString,
+      @Nullable String notificationTitle,
+      @Nullable String notificationContent,
       int notificationIcon,
       boolean shouldShowNextStep,
       boolean shouldShowLanes,
@@ -322,10 +326,11 @@ public class NavigationService extends Service {
           junctionImage);
     }
 
-    if (mNotificationManager != null && !TextUtils.isEmpty(notificationString)) {
+    if (mNotificationManager != null && !TextUtils.isEmpty(notificationTitle)) {
       mNotificationManager.notify(
           NOTIFICATION_ID,
-          getNotification(shouldNotify, true, notificationString, notificationIcon));
+          getNotification(
+              shouldNotify, true, notificationTitle, notificationContent, notificationIcon));
     }
   }
 
@@ -341,7 +346,7 @@ public class NavigationService extends Service {
     startForeground(
         NOTIFICATION_ID,
         getNotification(
-            true, false, getString(R.string.navigation_active), R.drawable.ic_launcher));
+            true, false, getString(R.string.navigation_active), null, R.drawable.ic_launcher));
 
     if (mNavigationManager != null) {
       mNavigationManager.navigationStarted();
@@ -471,19 +476,21 @@ public class NavigationService extends Service {
   private Notification getNotification(
       boolean shouldNotify,
       boolean showInCar,
-      CharSequence navigatingDisplayString,
+      CharSequence navigatingDisplayTitle,
+      CharSequence navigatingDisplayContent,
       int notificationIcon) {
     NotificationCompat.Builder builder =
         new NotificationCompat.Builder(this, CHANNEL_ID)
             .setContentIntent(createMainActivityPendingIntent())
             // .addAction(0, "STOP", createStopPendingIntent())
-            .setContentTitle(navigatingDisplayString)
+            .setContentTitle(navigatingDisplayTitle)
+            .setContentText(navigatingDisplayContent)
             .setOngoing(true)
             .setCategory(NotificationCompat.CATEGORY_NAVIGATION)
             .setOnlyAlertOnce(!shouldNotify)
             .setSmallIcon(R.drawable.ic_launcher)
             .setLargeIcon(BitmapFactory.decodeResource(getResources(), notificationIcon))
-            .setTicker(navigatingDisplayString)
+            .setTicker(navigatingDisplayTitle)
             .setWhen(System.currentTimeMillis());
 
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {

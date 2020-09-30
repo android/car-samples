@@ -75,7 +75,8 @@ public class Instruction {
   private final boolean mShouldShowLanes;
   @Nullable private final CarIcon mJunctionImage;
 
-  @Nullable private final String mNotificationString;
+  @Nullable private final String mNotificationTitle;
+  @Nullable private final String mNotificationContent;
   private final int mNotificationIcon;
   private final boolean mShouldNotify;
 
@@ -136,8 +137,13 @@ public class Instruction {
   }
 
   @Nullable
-  public String getNotificationString() {
-    return mNotificationString;
+  public String getNotificationTitle() {
+    return mNotificationTitle;
+  }
+
+  @Nullable
+  public String getNotificationContent() {
+    return mNotificationContent;
   }
 
   public int getNotificationIcon() {
@@ -160,7 +166,8 @@ public class Instruction {
     mShouldShowNextStep = builder.mShouldShowNextStep;
     mShouldShowLanes = builder.mShouldShowLanes;
     mJunctionImage = builder.mJunctionImage;
-    mNotificationString = builder.mNotificationString;
+    mNotificationTitle = builder.mNotificationTitle;
+    mNotificationContent = builder.mNotificationContent;
     mNotificationIcon = builder.mNotificationIcon;
     mShouldNotify = builder.mShouldNotify;
   }
@@ -179,7 +186,8 @@ public class Instruction {
     private boolean mShouldShowLanes;
     @Nullable private CarIcon mJunctionImage;
 
-    @Nullable private String mNotificationString;
+    @Nullable private String mNotificationTitle;
+    @Nullable private String mNotificationContent;
     @Nullable private int mNotificationIcon;
     private boolean mShouldNotify;
 
@@ -234,8 +242,12 @@ public class Instruction {
     }
 
     Builder setNotification(
-        boolean shouldNotify, @Nullable String notificationString, int notificationIcon) {
-      mNotificationString = notificationString;
+        boolean shouldNotify,
+        @Nullable String notificationTitle,
+        @Nullable String notificationContent,
+        int notificationIcon) {
+      mNotificationTitle = notificationTitle;
+      mNotificationContent = notificationContent;
       mShouldNotify = shouldNotify;
       mNotificationIcon = notificationIcon;
       return this;
