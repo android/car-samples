@@ -49,12 +49,12 @@ android {
 }
 
 dependencies {
-    implementation "com.google.android.libraries.car:car-app:1.0.0-beta.1"
+    implementation "com.google.android.libraries.car:car-app:1.0.0-beta.+"
     testImplementation "androidx.test:core:1.2.0"
     testImplementation "androidx.test:rules:1.2.0"
     testImplementation "com.google.truth:truth:1.0.1"
     testImplementation "org.robolectric:robolectric:4.4"
-    testImplementation "com.google.android.libraries.car:car-app-testing:1.0.0-beta.1"
+    testImplementation "com.google.android.libraries.car:car-app-testing:1.0.0-beta.+"
 
     androidTestImplementation "androidx.test:core:1.2.0"
     androidTestImplementation "androidx.test:rules:1.2.0"
