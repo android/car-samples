@@ -1,11 +1,19 @@
-# Android for Cars App Library Samples
-
+Android for Cars App Library Samples
+===========================================
 This directory contains sample apps that use the Android Auto car app SDK.
 
-## Installing the Apps
+Introduction
+============
+This project contains several apps that demonstrate how to use the car app SDK.
 
-### From Android Studio
+Please find the SDK documentation on https://developer.android.com/reference/com/google/android/libraries/car/app/packages.
 
+Prerequisites
+--------------
+- [Android 7.0 SDK (API level 24)](https://developer.android.com/studio/releases/platforms#7.0) or newer.
+
+Run From Android Studio
+-----------------------
 This directory is an Android Studio project containing the sample apps written using the Android Auto car app SDK. In order to install the apps,
 
 1. Open the project in Android Studio: File -> Open -> Select this directory and click OK.
@@ -14,8 +22,8 @@ This directory is an Android Studio project containing the sample apps written u
 
 3. Select Run -> Run ‘your app’, to run the app, which will just install it in the selected device.
 
-### From the Command Line
-
+Run From the Command Line
+---------------------
 Run ./gradlew :sample:assemble to assemble the APKs. E.g.
 
 ```bash
@@ -31,8 +39,8 @@ Install the APK with ADB:
 adb install -t path_to_your_apk
 ```
 
-## Run the Apps in the Desktop Head Unit (DHU)
-
+Run the Apps in the Desktop Head Unit (DHU)
+-------------------------------------------
 Follow the instructions in [Test Android apps for cars][1] to run the sample apps in the DHU.
 
 In short, do the following:
