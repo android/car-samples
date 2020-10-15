@@ -173,6 +173,7 @@ public final class ShowcaseService extends CarAppService implements DefaultLifec
       Screen newTop = new GoToPhoneScreen(getCarContext());
       screenManager.push(newTop);
       screenManager.remove(top);
+      top = newTop;
     }
     return (GoToPhoneScreen) top;
   }
