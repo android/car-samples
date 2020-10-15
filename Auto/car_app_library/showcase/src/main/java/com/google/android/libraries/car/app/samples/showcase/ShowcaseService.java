@@ -41,7 +41,13 @@ import com.google.android.libraries.car.app.samples.showcase.navigation.SurfaceR
 import com.google.android.libraries.car.app.samples.showcase.navigation.routing.NavigatingDemoScreen;
 import java.util.Objects;
 
-/** Entry point for the showcase app. */
+/**
+ * Entry point for the showcase app.
+ *
+ * <p>{@link CarAppService} is the main interface between the app and Android Auto. For more
+ * details, see the <a href="https://developer.android.com/training/cars/navigation">Android for
+ * Cars Library developer guide</a>.
+ */
 public final class ShowcaseService extends CarAppService implements DefaultLifecycleObserver {
   public static final String SHARED_PREF_KEY = "ShowcasePrefs";
   public static final String PRE_SEED_KEY = "PreSeed";

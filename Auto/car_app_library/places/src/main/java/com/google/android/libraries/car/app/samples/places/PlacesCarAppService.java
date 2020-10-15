@@ -21,7 +21,13 @@ import androidx.annotation.NonNull;
 import com.google.android.libraries.car.app.CarAppService;
 import com.google.android.libraries.car.app.Screen;
 
-/** Entry point for the app. */
+/**
+ * Entry point for the app.
+ *
+ * <p>{@link CarAppService} is the main interface between the app and Android Auto. For more
+ * details, see the <a href="https://developer.android.com/training/cars/navigation">Android for
+ * Cars Library developer guide</a>.
+ */
 public class PlacesCarAppService extends CarAppService {
   @NonNull
   @Override

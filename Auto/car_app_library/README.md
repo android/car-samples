@@ -6,7 +6,7 @@ Introduction
 ============
 This project contains several apps that demonstrate how to use the car app SDK.
 
-Please find the SDK documentation on https://developer.android.com/reference/com/google/android/libraries/car/app/packages.
+Please find the SDK documentation at https://developer.android.com/training/cars/navigation.
 
 Prerequisites
 --------------

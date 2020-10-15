@@ -49,7 +49,13 @@ import com.google.android.libraries.car.app.samples.navigation.nav.NavigationSer
 import java.util.ArrayList;
 import java.util.List;
 
-/** Entry point for the templated app. */
+/**
+ * Entry point for the templated app.
+ *
+ * <p>{@link CarAppService} is the main interface between the app and Android Auto. For more
+ * details, see the <a href="https://developer.android.com/training/cars/navigation">Android for
+ * Cars Library developer guide</a>.
+ */
 public final class NavigationCarAppService extends CarAppService
     implements NavigationScreen.Listener {
   private static final String TAG = NavigationCarAppService.class.getSimpleName();

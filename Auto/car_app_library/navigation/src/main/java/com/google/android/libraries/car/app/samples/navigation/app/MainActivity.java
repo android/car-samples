@@ -29,7 +29,11 @@ import android.widget.Button;
 import com.google.android.libraries.car.app.samples.navigation.R;
 import com.google.android.libraries.car.app.samples.navigation.nav.NavigationService;
 
-/** The main app activity. */
+/**
+ * The main app activity.
+ *
+ * <p>See {@link NavigationCarAppService} for the app's entry point to Android Auto.
+ */
 public class MainActivity extends Activity {
   private static final String TAG = MainActivity.class.getSimpleName();
   private Button mStartNavButton;
