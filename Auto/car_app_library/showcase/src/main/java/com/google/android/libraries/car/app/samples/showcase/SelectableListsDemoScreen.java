@@ -20,9 +20,11 @@ import static com.google.android.libraries.car.app.CarToast.LENGTH_LONG;
 import static com.google.android.libraries.car.app.model.Action.BACK;
 
 import androidx.annotation.NonNull;
+import androidx.core.graphics.drawable.IconCompat;
 import com.google.android.libraries.car.app.CarContext;
 import com.google.android.libraries.car.app.CarToast;
 import com.google.android.libraries.car.app.Screen;
+import com.google.android.libraries.car.app.model.CarIcon;
 import com.google.android.libraries.car.app.model.ItemList;
 import com.google.android.libraries.car.app.model.ListTemplate;
 import com.google.android.libraries.car.app.model.Row;
@@ -42,7 +44,15 @@ public final class SelectableListsDemoScreen extends Screen {
 
     ItemList radioList =
         ItemList.builder()
-            .addItem(Row.builder().setTitle("Option 1").addText("Some additional text").build())
+            .addItem(
+                Row.builder()
+                    .setImage(
+                        CarIcon.of(
+                            IconCompat.createWithResource(
+                                getCarContext(), R.drawable.ic_fastfood_white_48dp)))
+                    .setTitle("Option 1")
+                    .addText("Some additional text")
+                    .build())
             .addItem(Row.builder().setTitle("Option 2").build())
             .addItem(Row.builder().setTitle("Option 3").build())
             .setSelectable(this::onSelected)
