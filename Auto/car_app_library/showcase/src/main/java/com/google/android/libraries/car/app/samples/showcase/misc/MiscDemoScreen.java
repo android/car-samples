@@ -196,7 +196,7 @@ public final class MiscDemoScreen extends Screen implements DefaultLifecycleObse
             .setContentText(text + " (phone)")
             .setLargeIcon(
                 BitmapFactory.decodeResource(
-                    getCarContext().getResources(), R.drawable.ic_local_gas_station_white_48dp))
+                    getCarContext().getResources(), R.drawable.ic_hi))
             .setContentIntent(createPendingIntent(INTENT_ACTION_PRIMARY_PHONE))
             .setDeleteIntent(createPendingIntent(INTENT_ACTION_DELETE_PHONE))
             .addAction(
@@ -217,7 +217,7 @@ public final class MiscDemoScreen extends Screen implements DefaultLifecycleObse
                     .setLargeIcon(
                         BitmapFactory.decodeResource(
                             getCarContext().getResources(),
-                            R.drawable.ic_local_gas_station_white_48dp))
+                            R.drawable.ic_hi))
                     .setContentIntent(createPendingIntent(INTENT_ACTION_PRIMARY_CAR))
                     .setDeleteIntent(createPendingIntent(INTENT_ACTION_DELETE_CAR))
                     .addAction(
