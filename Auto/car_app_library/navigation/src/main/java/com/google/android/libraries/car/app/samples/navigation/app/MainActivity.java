@@ -16,6 +16,7 @@
 
 package com.google.android.libraries.car.app.samples.navigation.app;
 
+import android.Manifest;
 import android.app.Activity;
 import android.content.ComponentName;
 import android.content.Context;
@@ -85,6 +86,7 @@ public class MainActivity extends Activity {
     Log.i(TAG, "In onStart()");
     bindService(
         new Intent(this, NavigationService.class), mServiceConnection, Context.BIND_AUTO_CREATE);
+    requestPermissions(new String[] {Manifest.permission.ACCESS_FINE_LOCATION}, 1);
   }
 
   @Override

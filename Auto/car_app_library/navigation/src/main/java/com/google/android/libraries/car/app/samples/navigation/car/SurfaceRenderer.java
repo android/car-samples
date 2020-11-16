@@ -51,6 +51,7 @@ public final class SurfaceRenderer implements DefaultLifecycleObserver {
   private boolean mShowMarkers;
   private int mNumMarkers;
   private int mActiveMarker;
+  private String mLocationString = "unknown";
 
   private final SurfaceListener mSurfaceListener =
       new SurfaceListener() {
@@ -139,6 +140,11 @@ public final class SurfaceRenderer implements DefaultLifecycleObserver {
     renderFrame();
   }
 
+  public void updateLocationString(String locationString) {
+    mLocationString = locationString;
+    renderFrame();
+  }
+
   private void renderFrame() {
     if (mSurface == null || !mSurface.isValid()) {
       // Surface is not available, or has been destroyed, skip this frame.
@@ -183,6 +189,13 @@ public final class SurfaceRenderer implements DefaultLifecycleObserver {
           "(" + visibleArea.right + " , " + visibleArea.bottom + ")",
           visibleArea.right - horizontalTextMargin,
           visibleArea.bottom - verticalTextMarginFromBottom,
+          mRightInsetPaint);
+
+      // Draw location on the top right corner of the screen.
+      canvas.drawText(
+          "(" + mLocationString + ")",
+          visibleArea.right - horizontalTextMargin,
+          visibleArea.top + verticalTextMarginFromTop,
           mRightInsetPaint);
     } else {
       Log.d(TAG, "Visible area not available.");

@@ -46,6 +46,7 @@
 
     <service
         android:name=".car.NavigationCarAppService"
+        android:foregroundServiceType="location"
         android:exported="true">
 
       <intent-filter>

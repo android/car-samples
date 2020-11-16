@@ -16,16 +16,27 @@
 
 package com.google.android.libraries.car.app.samples.navigation.car;
 
+import android.Manifest;
+import android.app.Notification;
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
+import android.content.pm.PackageManager;
 import android.content.res.Configuration;
+import android.location.Location;
+import android.location.LocationListener;
+import android.location.LocationManager;
 import android.net.Uri;
+import android.os.Build;
+import android.os.Bundle;
 import android.os.IBinder;
 import android.util.Log;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.core.app.NotificationCompat;
 import androidx.core.graphics.drawable.IconCompat;
 import androidx.lifecycle.DefaultLifecycleObserver;
 import androidx.lifecycle.Lifecycle;
@@ -59,6 +70,11 @@ import java.util.List;
 public final class NavigationCarAppService extends CarAppService
     implements NavigationScreen.Listener {
   private static final String TAG = NavigationCarAppService.class.getSimpleName();
+
+  public static final String CHANNEL_ID = "NavigationCarAppServiceChannel";
+
+  /** The identifier for the notification displayed for the foreground service. */
+  private static final int NOTIFICATION_ID = 97654321;
 
   private static final String URI_SCHEME = "samples";
   private static final String URI_HOST = "navigation";
@@ -101,6 +117,24 @@ public final class NavigationCarAppService extends CarAppService
               shouldShowLanes,
               junctionImage);
         }
+      };
+
+  // A listener to periodically update the surface with the location coordinates
+  private LocationListener mLocationListener =
+      new LocationListener() {
+        @Override
+        public void onLocationChanged(Location location) {
+          mNavigationCarSurface.updateLocationString(getLocationString(location));
+        }
+
+        @Override
+        public void onStatusChanged(String provider, int status, Bundle extras) {}
+
+        @Override
+        public void onProviderEnabled(String provider) {}
+
+        @Override
+        public void onProviderDisabled(String provider) {}
       };
 
   // Monitors the state of the connection to the Navigation service.
@@ -160,6 +194,10 @@ public final class NavigationCarAppService extends CarAppService
         @Override
         public void onDestroy(@NonNull LifecycleOwner lifecycleOwner) {
           Log.i(TAG, "In onDestroy()");
+
+          stopForeground(true);
+          LocationManager locationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
+          locationManager.removeUpdates(mLocationListener);
         }
       };
 
@@ -194,6 +232,35 @@ public final class NavigationCarAppService extends CarAppService
               getCarContext(), "Navigation intent: " + intent.getDataString(), CarToast.LENGTH_LONG)
           .show();
     }
+
+    createNotificationChannel();
+
+    // Turn the car app service into a foreground service in order to make sure we can use all
+    // granted "while-in-use" permissions (e.g. location) in the app's process.
+    // The "while-in-use" location permission is granted as long as there is a foreground service
+    // running in a process in which location access takes place. Here, we set this service, and not
+    // NavigationService (which runs only during navigation), as a foreground service because we
+    // need location access even when not navigating. If location access is needed only during
+    // navigation, we can set NavigationService as a foreground service instead.
+    // See
+    // https://developer.android.com/reference/com/google/android/libraries/car/app/CarAppService#accessing-location for more details.
+    startForeground(NOTIFICATION_ID, getNotification());
+
+    if (checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION)
+        == PackageManager.PERMISSION_GRANTED) {
+      requestLocationUpdates();
+    } else {
+      // If we do not have the location permission, preseed the navigation screen first, and push
+      // the request permission screen. When the user grants the location permission, the request
+      // permission screen will be popped and the navigation screen will be displayed.
+      getCarContext().getCarService(ScreenManager.class).push(mNavigationScreen);
+      return new RequestPermissionScreen(
+          getCarContext(),
+          () -> {
+            requestLocationUpdates();
+          });
+    }
+
     return mNavigationScreen;
   }
 
@@ -259,5 +326,59 @@ public final class NavigationCarAppService extends CarAppService
     if (mService != null) {
       mService.stopNavigation();
     }
+  }
+
+  private void createNotificationChannel() {
+    NotificationManager notificationManager =
+        (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+      CharSequence name = "Car App Service";
+      NotificationChannel serviceChannel =
+          new NotificationChannel(CHANNEL_ID, name, NotificationManager.IMPORTANCE_HIGH);
+      notificationManager.createNotificationChannel(serviceChannel);
+    }
+  }
+
+  /** Returns the {@link NotificationCompat} used as part of the foreground service. */
+  private Notification getNotification() {
+    NotificationCompat.Builder builder =
+        new NotificationCompat.Builder(this, CHANNEL_ID)
+            .setContentTitle("Navigation App")
+            .setContentText("App is running")
+            .setSmallIcon(R.drawable.ic_launcher);
+
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+      builder.setChannelId(CHANNEL_ID);
+      builder.setPriority(NotificationManager.IMPORTANCE_HIGH);
+    }
+    return builder.build();
+  }
+
+  /**
+   * Requests location updates for the navigation surface.
+   *
+   * @throws java.lang.SecurityException if the app does not have the location permission.
+   */
+  private void requestLocationUpdates() {
+    LocationManager locationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
+    Location location = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
+    mNavigationCarSurface.updateLocationString(getLocationString(location));
+    locationManager.requestLocationUpdates(
+        LocationManager.GPS_PROVIDER,
+        /* minTimeMs= */ 1000,
+        /* minDistanceM= */ 1,
+        mLocationListener);
+  }
+
+  private static String getLocationString(@Nullable Location location) {
+    if (location == null) {
+      return "unknown";
+    }
+    return "time: "
+        + location.getTime()
+        + " lat: "
+        + location.getLatitude()
+        + " lng: "
+        + location.getLongitude();
   }
 }
