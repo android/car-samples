@@ -226,7 +226,7 @@ public final class MiscDemoScreen extends Screen implements DefaultLifecycleObse
                         createDeepLinkActionPendingIntent(INTENT_ACTION_PHONE))
                     .addAction(
                         R.drawable.ic_face_24px,
-                        "Cancel Reservation",
+                        "Cancel",
                         createDeepLinkActionPendingIntent(INTENT_ACTION_CANCEL_RESERVATION))
                     .build())
             .build();
