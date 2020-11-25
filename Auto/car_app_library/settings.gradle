@@ -15,6 +15,7 @@
  */
 
 rootProject.name='samples'
+include ':grid'
 include ':helloworld'
 include ':navigation'
 include ':places'
