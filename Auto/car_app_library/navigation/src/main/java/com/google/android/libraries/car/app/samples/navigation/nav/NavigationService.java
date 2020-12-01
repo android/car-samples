@@ -153,7 +153,8 @@ public class NavigationService extends Service {
 
           @Override
           public void onAutoDriveEnabled() {
-            CarToast.makeText(carContext, "Auto drive enabled", CarToast.LENGTH_LONG);
+            Log.d(TAG, "onAutoDriveEnabled called");
+            CarToast.makeText(carContext, "Auto drive enabled", CarToast.LENGTH_LONG).show();
           }
         });
     mListener = listener;
