@@ -41,7 +41,7 @@ public final class MiscTemplateDemosScreenTest {
     ListTemplateController controller =
         ListTemplateController.of((ListTemplate) screen.getTemplate());
 
-    assertThat(controller.getSingleList().getItems()).hasSize(5);
+    assertThat(controller.getSingleList().getItems()).hasSize(6);
   }
 
   @Test

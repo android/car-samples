@@ -43,7 +43,7 @@ public final class LoadingDemoScreen extends Screen implements DefaultLifecycleO
   @Override
   @SuppressWarnings({"FutureReturnValueIgnored"})
   public void onStart(@NonNull LifecycleOwner owner) {
-    // Post a message that finishes loading the the template after some time.
+    // Post a message that finishes loading the template after some time.
     handler.postDelayed(
         () -> {
           isFinishedLoading = true;

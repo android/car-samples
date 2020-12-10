@@ -72,6 +72,13 @@ public final class MiscTemplateDemosScreen extends Screen {
                 () -> getScreenManager().push(new MessageTemplateDemoScreen(getCarContext())))
             .build());
 
+    listBuilder.addItem(
+        Row.builder()
+            .setTitle("Grid Template Demo")
+            .setOnClickListener(
+                () -> getScreenManager().push(new GridTemplateDemoScreen(getCarContext())))
+            .build());
+
     return ListTemplate.builder()
         .setSingleList(listBuilder.build())
         .setTitle("Misc Templates Demos")
