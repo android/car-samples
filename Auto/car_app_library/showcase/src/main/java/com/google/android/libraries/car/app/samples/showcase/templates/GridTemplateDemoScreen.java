@@ -22,6 +22,7 @@ import static com.google.android.libraries.car.app.model.Action.BACK;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.os.Handler;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.graphics.drawable.IconCompat;
@@ -39,10 +40,16 @@ import com.google.android.libraries.car.app.model.ItemList;
 import com.google.android.libraries.car.app.model.Template;
 import com.google.android.libraries.car.app.samples.showcase.R;
 
-/** Creates a screen that demonstrates usage of the full screen {@link GridTemplate}. */
+/**
+ * Creates a screen that demonstrates usage of the full screen {@link GridTemplate}.
+ */
 public final class GridTemplateDemoScreen extends Screen implements DefaultLifecycleObserver {
+  private static final int LOADING_TIME_MILLIS = 2000;
+  private final Handler handler = new Handler();
+
   @Nullable private IconCompat mImage;
   @Nullable private IconCompat mIcon;
+  private boolean isFourthItemLoading;
   private boolean thirdItemToggleState;
   private boolean fourthItemToggleState;
   private boolean fifthItemToggleState;
@@ -50,6 +57,7 @@ public final class GridTemplateDemoScreen extends Screen implements DefaultLifec
   public GridTemplateDemoScreen(CarContext carContext) {
     super(carContext);
     getLifecycle().addObserver(this);
+    isFourthItemLoading = false;
     thirdItemToggleState = false;
     fourthItemToggleState = true;
     fifthItemToggleState = false;
@@ -61,6 +69,15 @@ public final class GridTemplateDemoScreen extends Screen implements DefaultLifec
     Bitmap bitmap = BitmapFactory.decodeResource(resources, R.drawable.test_image_square);
     mImage = IconCompat.createWithBitmap(bitmap);
     mIcon = IconCompat.createWithResource(getCarContext(), R.drawable.ic_fastfood_white_48dp);
+  }
+
+  @Override
+  @SuppressWarnings({"FutureReturnValueIgnored"})
+  public void onStart(@NonNull LifecycleOwner owner) {
+    isFourthItemLoading = false;
+
+    // Post a message that starts loading the fourth item for some time.
+    triggerFourthItemLoading();
   }
 
   @NonNull
@@ -99,23 +116,26 @@ public final class GridTemplateDemoScreen extends Screen implements DefaultLifec
                 })
             .build());
 
-    // Grid item with an image, a title, a long text and a toggle in checked state.
-    gridItemlistBuilder.addItem(
-        GridItem.builder()
-            .setImage(CarIcon.of(mImage))
-            .setTitle("Fourth")
-            .setText(fourthItemToggleState ? "On" : "Off")
-            .setOnClickListener(
-                () -> {
-                  fourthItemToggleState = !fourthItemToggleState;
-                  CarToast.makeText(
-                          getCarContext(),
-                          "Fourth item checked: " + fourthItemToggleState,
-                          LENGTH_LONG)
-                      .show();
-                  invalidate();
-                })
-            .build());
+    // Grid item with an image, a title, a long text and a toggle that takes some time to update.
+    if (isFourthItemLoading) {
+      gridItemlistBuilder.addItem(
+          GridItem.builder()
+              .setTitle("Fourth")
+              .setText(fourthItemToggleState ? "On" : "Off")
+              .setLoading(true)
+              .build());
+    } else {
+      gridItemlistBuilder.addItem(
+          GridItem.builder()
+              .setImage(CarIcon.of(mImage))
+              .setTitle("Fourth")
+              .setText(fourthItemToggleState ? "On" : "Off")
+              .setOnClickListener(
+                  () -> {
+                    triggerFourthItemLoading();
+                  })
+              .build());
+    }
 
     // Grid item with a large image, a long title, no text and a toggle in unchecked state.
     gridItemlistBuilder.addItem(
@@ -161,5 +181,25 @@ public final class GridTemplateDemoScreen extends Screen implements DefaultLifec
                 .build())
         .setHeaderAction(BACK)
         .build();
+  }
+
+  /**
+   * Changes the fourth item to a loading state for some time and changes it back to the loaded
+   * state.
+   */
+  private void triggerFourthItemLoading() {
+    handler.post(
+        () -> {
+          isFourthItemLoading = true;
+          invalidate();
+
+          handler.postDelayed(
+              () -> {
+                isFourthItemLoading = false;
+                fourthItemToggleState = !fourthItemToggleState;
+                invalidate();
+              },
+              LOADING_TIME_MILLIS);
+        });
   }
 }
