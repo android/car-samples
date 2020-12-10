@@ -66,8 +66,11 @@ public class NavigationService extends Service {
 
   public static final String CHANNEL_ID = "NavigationServiceChannel";
 
-  /** The identifier for the notification displayed for the foreground service. */
-  private static final int NOTIFICATION_ID = 87654321;
+  /** The identifier for the navigation notification displayed for the foreground service. */
+  private static final int NAV_NOTIFICATION_ID = 87654321;
+
+  /** The identifier for the non-navigation notifications, such as a traffic accident warning. */
+  private static final int NOTIFICATION_ID = 77654321;
 
   // Constants for location broadcast
   private static final String PACKAGE_NAME =
@@ -227,6 +230,8 @@ public class NavigationService extends Service {
                     if (++mStepsSent % 10 == 0) {
                       // For demo purposes only play audio of next turn every 10 steps.
                       playNavigationDirection(R.raw.turn_right);
+                      mNotificationManager.notify(
+                          NOTIFICATION_ID, getTrafficAccidentWarningNotification());
                     }
 
                     update(
@@ -329,7 +334,7 @@ public class NavigationService extends Service {
 
     if (mNotificationManager != null && !TextUtils.isEmpty(notificationTitle)) {
       mNotificationManager.notify(
-          NOTIFICATION_ID,
+          NAV_NOTIFICATION_ID,
           getNotification(
               shouldNotify, true, notificationTitle, notificationContent, notificationIcon));
     }
@@ -345,7 +350,7 @@ public class NavigationService extends Service {
 
     Log.i(TAG, "Starting foreground service");
     startForeground(
-        NOTIFICATION_ID,
+        NAV_NOTIFICATION_ID,
         getNotification(
             true, false, getString(R.string.navigation_active), null, R.drawable.ic_launcher));
 
@@ -489,6 +494,10 @@ public class NavigationService extends Service {
             .setOngoing(true)
             .setCategory(NotificationCompat.CATEGORY_NAVIGATION)
             .setOnlyAlertOnce(!shouldNotify)
+
+            // Set the notification's background color on the car screen.
+            .setColor(getResources().getColor(R.color.nav_notification_background_color))
+            .setColorized(true)
             .setSmallIcon(R.drawable.ic_launcher)
             .setLargeIcon(BitmapFactory.decodeResource(getResources(), notificationIcon))
             .setTicker(navigatingDisplayTitle)
@@ -499,26 +508,36 @@ public class NavigationService extends Service {
       builder.setPriority(NotificationManager.IMPORTANCE_HIGH);
     }
     if (showInCar) {
-      builder
-          .extend(
-              CarAppExtender.builder()
-                  .setImportance(NotificationManagerCompat.IMPORTANCE_HIGH)
-                  .setContentIntent(
+      builder.extend(
+          CarAppExtender.builder()
+              .setImportance(NotificationManagerCompat.IMPORTANCE_HIGH)
+              .setContentIntent(
 
-                      // Set an intent to open the car app. The app receives this intent when the
-                      // user taps the heads-up notification or the rail widget.
-                      PendingIntent.getBroadcast(
-                          this,
-                          INTENT_ACTION_NAV_NOTIFICATION_OPEN_APP.hashCode(),
-                          new Intent(INTENT_ACTION_NAV_NOTIFICATION_OPEN_APP)
-                              .setComponent(
-                                  new ComponentName(
-                                      mCarContext, DeepLinkNotificationReceiver.class)),
-                          0))
-                  .build())
-          .build();
+                  // Set an intent to open the car app. The app receives this intent when the
+                  // user taps the heads-up notification or the rail widget.
+                  PendingIntent.getBroadcast(
+                      this,
+                      INTENT_ACTION_NAV_NOTIFICATION_OPEN_APP.hashCode(),
+                      new Intent(INTENT_ACTION_NAV_NOTIFICATION_OPEN_APP)
+                          .setComponent(
+                              new ComponentName(mCarContext, DeepLinkNotificationReceiver.class)),
+                      0))
+              .build());
     }
     return builder.build();
+  }
+
+  private Notification getTrafficAccidentWarningNotification() {
+    return new NotificationCompat.Builder(this, CHANNEL_ID)
+        .setContentTitle("Traffic accident ahead")
+        .setContentText("Drive slowly")
+        .setSmallIcon(R.drawable.ic_settings)
+        .setLargeIcon(BitmapFactory.decodeResource(getResources(), R.drawable.ic_settings))
+        .extend(
+            CarAppExtender.builder()
+                .setImportance(NotificationManagerCompat.IMPORTANCE_HIGH)
+                .build())
+        .build();
   }
 
   private PendingIntent createStopPendingIntent() {
