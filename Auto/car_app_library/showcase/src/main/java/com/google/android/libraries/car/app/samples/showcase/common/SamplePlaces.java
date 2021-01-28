@@ -185,6 +185,19 @@ public class SamplePlaces {
                     PlaceMarker.TYPE_IMAGE)
                 .build()));
 
+    Location location5 = new Location(SamplePlaces.class.getSimpleName());
+    location5.setLatitude(47.6490374);
+    location5.setLongitude(-122.3527127);
+    places.add(
+        new PlaceInfo(
+            "Google Bothell",
+            "11831 North Creek Pkwy, Bothell, WA 98011",
+            "Text label",
+            "BOT",
+            "n/a",
+            location5,
+            PlaceMarker.builder().setLabel("BOT").build()));
+
     return places;
   }
 }
