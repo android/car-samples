@@ -90,7 +90,7 @@ class MainActivity : Activity() {
         // Subscribes to the gear change events.
         carPropertyManager.registerCallback(
             carPropertyListener,
-            VehiclePropertyIds.CURRENT_GEAR,
+            VehiclePropertyIds.GEAR_SELECTION,
             CarPropertyManager.SENSOR_RATE_ONCHANGE
         )
     }
