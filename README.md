@@ -9,5 +9,3 @@ The samples are categorized by the libraries they use to integrate with the car:
 and charging apps for the Android Auto-compatible cars. The app may be running in
 a phone connected to the car or in the Android Automotive OS running in the car.
 
-- Android Automotive OS - Android-based infotainment system that is built in to vehicles.
-The car's system is a stand-alone Android device that is optimized for driving.
