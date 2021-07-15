@@ -38,7 +38,7 @@ import androidx.car.app.sample.navigation.common.nav.NavigationService;
  * The main app activity.
  *
  * <p>See {@link androidx.car.app.sample.navigation.common.car.NavigationCarAppService} for the
- * app's entry point to Android Auto.
+ * app's entry point to the cat host.
  */
 public class MainActivity extends ComponentActivity {
     static final String TAG = MainActivity.class.getSimpleName();
@@ -55,7 +55,7 @@ public class MainActivity extends ComponentActivity {
 
                 @Override
                 public void onServiceConnected(ComponentName name, IBinder service) {
-                    Log.i(TAG, String.format("In onServiceConnected() component:%s", name));
+                    Log.i(TAG, "In onServiceConnected() component:" + name);
                     NavigationService.LocalBinder binder = (NavigationService.LocalBinder) service;
                     mService = binder.getService();
                     mIsBound = true;
@@ -63,7 +63,7 @@ public class MainActivity extends ComponentActivity {
 
                 @Override
                 public void onServiceDisconnected(ComponentName name) {
-                    Log.i(TAG, String.format("In onServiceDisconnected() component:%s", name));
+                    Log.i(TAG, "In onServiceDisconnected() component:" + name);
                     mService = null;
                     mIsBound = false;
                 }
