@@ -202,8 +202,11 @@ public class MicrophoneRecorder {
     private void addHeader(OutputStream outputStream, int totalAudioLen) throws IOException {
         int totalDataLen = totalAudioLen + 36;
         byte[] header = new byte[44];
-        int dataElementSize = 8;
+        int channels = 1;
+        int dataElementSize = 16;
+        long blockAlign = channels * dataElementSize / 8;
         long longSampleRate = AUDIO_CONTENT_SAMPLING_RATE;
+        long byteRate = longSampleRate * blockAlign;
 
         // See http://soundfile.sapp.org/doc/WaveFormat/
         header[0] = 'R';  // RIFF/WAVE header
@@ -228,17 +231,17 @@ public class MicrophoneRecorder {
         header[19] = 0;
         header[20] = 1;  // format = 1 PCM
         header[21] = 0;
-        header[22] = 1; // Num channels (mono)
+        header[22] = (byte) channels; // Num channels (mono)
         header[23] = 0;
         header[24] = (byte) (longSampleRate & 0xff); // sample rate
         header[25] = (byte) ((longSampleRate >> 8) & 0xff);
         header[26] = (byte) ((longSampleRate >> 16) & 0xff);
         header[27] = (byte) ((longSampleRate >> 24) & 0xff);
-        header[28] = (byte) (longSampleRate & 0xff); // byte rate
-        header[29] = (byte) ((longSampleRate >> 8) & 0xff);
-        header[30] = (byte) ((longSampleRate >> 16) & 0xff);
-        header[31] = (byte) ((longSampleRate >> 24) & 0xff);
-        header[32] = 1;  // block align
+        header[28] = (byte) (byteRate & 0xff); // byte rate
+        header[29] = (byte) ((byteRate >> 8) & 0xff);
+        header[30] = (byte) ((byteRate >> 16) & 0xff);
+        header[31] = (byte) ((byteRate >> 24) & 0xff);
+        header[32] = (byte) blockAlign; // block align
         header[33] = 0;
         header[34] = (byte) (dataElementSize & 0xff);  // bits per sample
         header[35] = (byte) ((dataElementSize >> 8) & 0xff);
