@@ -12,7 +12,7 @@ android {
 
 dependencies {
     implementation(libs.androidx.car.projected)
-    implementation(project(":navigation:shared"))
+    implementation(project(":car_app_library:navigation:shared"))
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)

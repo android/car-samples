@@ -14,7 +14,7 @@ dependencies {
     implementation(libs.androidx.car.automotive)
 //    implementation(libs.androidx.core.ktx)
 //    implementation(libs.androidx.appcompat)
-    implementation(project(":places:shared"))
+    implementation(project(":car_app_library:places:shared"))
 //    testImplementation(libs.junit)
 //    androidTestImplementation(libs.androidx.junit)
 //    androidTestImplementation(libs.androidx.espresso.core)
