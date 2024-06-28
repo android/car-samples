@@ -1,10 +1,14 @@
 package gradlePlugins
 
 import com.android.build.gradle.BaseExtension
+import org.gradle.api.JavaVersion
 import org.gradle.api.Plugin
 import org.gradle.api.Project
+import org.gradle.api.artifacts.VersionCatalog
+import org.gradle.api.artifacts.VersionCatalogsExtension
 import org.gradle.kotlin.dsl.dependencies
 import org.gradle.kotlin.dsl.withType
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 class AndroidApplicationPlugin : Plugin<Project> {
 
@@ -14,8 +18,12 @@ class AndroidApplicationPlugin : Plugin<Project> {
 
     override fun apply(project: Project) =
         with(project) {
+            val libs = project.rootProject
+                .extensions
+                .getByType(VersionCatalogsExtension::class.java)
+                .named("libs")
             applyPlugins()
-            androidConfig()
+            androidConfig(libs)
             dependenciesConfig()
         }
 
@@ -26,15 +34,16 @@ class AndroidApplicationPlugin : Plugin<Project> {
         }
     }
 
-    private fun Project.androidConfig() {
+    private fun Project.androidConfig(libs: VersionCatalog) {
+        val javaVer = JavaVersion.valueOf(libs.findVersion("java_compatibility").get().displayName)
         android.run {
-            compileSdkVersion( ver.build.compile_sdk)
+            compileSdkVersion( libs.findVersion("compile_sdk").get().displayName.toInt())
             defaultConfig {
-                minSdk = ver.build.min_sdk
+                minSdk = libs.findVersion("compile_sdk").get().displayName.toInt()
                 testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
-                targetSdk = ver.build.compile_sdk
-                versionCode = ver.build.versionCode
-                versionName = ver.build.versionName
+                targetSdk = libs.findVersion("compile_sdk").get().displayName.toInt()
+                versionCode = libs.findVersion("versionCode").get().displayName.toInt()
+                versionName = libs.findVersion("versionName").get().displayName
             }
             buildTypes {
                 getByName("debug") {
@@ -47,12 +56,12 @@ class AndroidApplicationPlugin : Plugin<Project> {
                 }
             }
             compileOptions {
-                sourceCompatibility = ver.build.java_compatibility
-                targetCompatibility = ver.build.java_compatibility
+//                isCoreLibraryDesugaringEnabled = true
+                sourceCompatibility = javaVer
+                targetCompatibility = javaVer
             }
-
-            tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().configureEach {
-                kotlinOptions.jvmTarget = ver.build.java_compatibility.toString()
+            tasks.withType<KotlinCompile>().configureEach {
+                kotlinOptions.jvmTarget = javaVer.toString()
             }
         }
     }
