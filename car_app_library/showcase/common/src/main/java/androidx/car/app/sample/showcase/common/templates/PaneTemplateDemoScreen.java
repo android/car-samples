@@ -37,6 +37,7 @@ import androidx.car.app.model.Pane;
 import androidx.car.app.model.PaneTemplate;
 import androidx.car.app.model.Row;
 import androidx.car.app.model.Template;
+import androidx.car.app.navigation.model.MapWithContentTemplate;
 import androidx.car.app.sample.showcase.common.R;
 import androidx.car.app.versioning.CarAppApiLevels;
 import androidx.core.graphics.drawable.IconCompat;
@@ -93,7 +94,6 @@ public final class PaneTemplateDemoScreen extends Screen implements DefaultLifec
         }
     }
 
-    @NonNull
     @Override
     public Template onGetTemplate() {
         int listLimit = 4;
@@ -140,27 +140,29 @@ public final class PaneTemplateDemoScreen extends Screen implements DefaultLifec
                                                 .show())
                                 .build());
 
-        return new PaneTemplate.Builder(paneBuilder.build())
-                .setHeaderAction(Action.BACK)
-                .setActionStrip(
-                        new ActionStrip.Builder()
-                                .addAction(new Action.Builder()
-                                        .setTitle(getCarContext().getString(
-                                                R.string.commute_action_title))
-                                        .setIcon(
-                                                new CarIcon.Builder(mCommuteIcon)
-                                                        .setTint(CarColor.BLUE)
-                                                        .build())
-                                        .setOnClickListener(
-                                                () -> CarToast.makeText(
-                                                                getCarContext(),
-                                                                getCarContext().getString(
-                                                                        R.string.commute_toast_msg),
-                                                                LENGTH_SHORT)
-                                                        .show())
+        return new MapWithContentTemplate.Builder()
+                .setContentTemplate(new PaneTemplate.Builder(paneBuilder.build())
+                        .setHeaderAction(Action.BACK)
+                        .setActionStrip(
+                                new ActionStrip.Builder()
+                                        .addAction(new Action.Builder()
+                                                .setTitle(getCarContext().getString(
+                                                        R.string.commute_action_title))
+                                                .setIcon(
+                                                        new CarIcon.Builder(mCommuteIcon)
+                                                                .setTint(CarColor.BLUE)
+                                                                .build())
+                                                .setOnClickListener(
+                                                        () -> CarToast.makeText(
+                                                                        getCarContext(),
+                                                                        getCarContext().getString(
+                                                                                R.string.commute_toast_msg),
+                                                                        LENGTH_SHORT)
+                                                                .show())
+                                                .build())
                                         .build())
-                                .build())
-                .setTitle(getCarContext().getString(R.string.pane_template_demo_title))
+                        .setTitle(getCarContext().getString(R.string.pane_template_demo_title))
+                        .build())
                 .build();
     }
 }
