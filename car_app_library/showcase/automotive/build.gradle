@@ -17,7 +17,7 @@
 apply plugin: 'com.android.application'
 
 android {
-    compileSdk 33
+    compileSdk 35
 
     defaultConfig {
         applicationId "androidx.car.app.sample.showcase"
