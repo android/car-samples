@@ -4,9 +4,9 @@ name: Build CarGearViewerKotlin Automotive
 on:
   workflow_dispatch:
   push:
-    branches: [ main ] # Adjust if default branch is different
+    branches: [ main ]
   pull_request:
-    branches: [ main ] # Adjust if default branch is different
+    branches: [ main ]
 
 jobs:
   build:
@@ -18,7 +18,7 @@ jobs:
         uses: actions/setup-java@v3
         with:
           distribution: 'zulu'
-          java-version: '17'
+          java-version: '11'
           cache: 'gradle'
 
       - name: Setup Gradle
