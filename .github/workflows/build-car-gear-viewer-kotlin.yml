@@ -1,0 +1,35 @@
+# Workflow name
+name: Build CarGearViewerKotlin Automotive
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ main ] # Adjust if default branch is different
+  pull_request:
+    branches: [ main ] # Adjust if default branch is different
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set Up JDK
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'zulu'
+          java-version: '17'
+          cache: 'gradle'
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+        # The gradlew is inside the CarGearViewerKotlin directory
+        with:
+          build-root-directory: car-lib/CarGearViewerKotlin
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Build CarGearViewerKotlin automotive app
+        # Run gradlew from its location
+        run: cd car-lib/CarGearViewerKotlin && ./gradlew :automotive:assembleDebug
