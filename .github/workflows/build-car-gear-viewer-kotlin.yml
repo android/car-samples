@@ -17,19 +17,17 @@ jobs:
       - name: Set Up JDK
         uses: actions/setup-java@v3
         with:
-          distribution: 'zulu'
-          java-version: '11'
-          cache: 'gradle'
+            distribution: 'zulu'
+            java-version: '11'
+            cache: 'gradle'    
 
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
-        # The gradlew is inside the CarGearViewerKotlin directory
-        with:
-          build-root-directory: car-lib/CarGearViewerKotlin
 
-      - name: Setup Android SDK
-        uses: android-actions/setup-android@v3
+      - name: Make gradlew executable
+        run: chmod +x ./gradlew
+        working-directory: ./car-lib/CarGearViewerKotlin
 
       - name: Build CarGearViewerKotlin automotive app
-        # Run gradlew from its location
-        run: cd car-lib/CarGearViewerKotlin && ./gradlew :automotive:assembleDebug
+        working-directory: ./car-lib/CarGearViewerKotlin # Sets the context for the run command
+        run: ./gradlew :automotive:assembleDebug
