@@ -29,6 +29,8 @@
         android:supportsRtl="true"
         android:theme="@android:style/Theme.DeviceDefault.NoActionBar">
         <activity android:name="com.example.cargearviewer.MainActivity">
+            <!-- This allows the app to run when the car is moving. Use it carefully. -->
+            <meta-data android:name="distractionOptimized" android:value="true" />
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
