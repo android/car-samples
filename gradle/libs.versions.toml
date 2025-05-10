@@ -1,0 +1,43 @@
+[versions]
+## SDK Versions
+min_sdk = "29"
+compile_sdk = "34"
+java_compatibility = "VERSION_17"
+versionCode = "1"
+versionName = "1.0"
+
+# BuildSrc Version
+agp = "8.5.0"
+kotlin = "1.9.0"
+# Dependencies Versions
+carApp = "1.4.0"
+coreKtx = "1.10.1"
+junit = "4.13.2"
+junitVersion = "1.1.5"
+espressoCore = "3.5.1"
+appcompat = "1.6.1"
+material = "1.10.0"
+activity = "1.8.0"
+constraintlayout = "2.1.4"
+media = "1.6.0"
+guava = "28.1-jre"
+
+[libraries]
+# buildSrc
+android-build-gradle = { module = "com.android.tools.build:gradle", version.ref ="agp"}
+jetbrains-kotlin = { module = "org.jetbrains.kotlin:kotlin-gradle-plugin", version.ref ="kotlin"}
+# Dependecies
+androidx-car-projected = { module = "androidx.car.app:app-projected", version.ref = "carApp"}
+androidx-car-automotive = { module = "androidx.car.app:app-automotive", version.ref = "carApp"}
+androidx-car-app = { module = "androidx.car.app:app", version.ref = "carApp"}
+androidx-core = { module = "androidx.core:core", version.ref = "coreKtx"}
+androidx-core-ktx = { module = "androidx.core:core-ktx", version.ref = "coreKtx"}
+junit = { module = "junit:junit", version.ref = "junit"}
+androidx-junit = { module = "androidx.test.ext:junit", version.ref = "junitVersion"}
+androidx-espresso-core = { module = "androidx.test.espresso:espresso-core", version.ref = "espressoCore"}
+androidx-appcompat = { module = "androidx.appcompat:appcompat", version.ref = "appcompat"}
+material = { module = "com.google.android.material:material", version.ref = "material"}
+androidx-activity = { module = "androidx.activity:activity", version.ref = "activity"}
+androidx-constraintlayout = { module = "androidx.constraintlayout:constraintlayout", version.ref = "constraintlayout"}
+androidx-media = { module = "androidx.media:media", version.ref = "media"}
+google-guava = { module = "com.google.guava:guava", version.ref = "guava"}
